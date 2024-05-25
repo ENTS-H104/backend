@@ -2,7 +2,6 @@ const dbPool = require('../config/database')
 
 const getAllUsers = () => {
     const SQLQuery = `SELECT 
-                        users.user_id, 
                         users.user_uid, 
                         users.verified_status_uuid, 
                         user_roles.name as role,
@@ -13,17 +12,17 @@ const getAllUsers = () => {
                         users.created_at,
                         users.updated_at
                        FROM users
-                       INNER JOIN user_roles ON users.user_role_id = user_roles.user_role_id`;
+                       INNER JOIN user_roles ON users.user_role_uuid = user_roles.user_role_uuid`;
     return dbPool.execute(SQLQuery);
 }
 
-const registerUsers = async (uid, email, phone_number, username, uuid) => {    const SQLQuery1 = `INSERT INTO verified_status (verified_status_uuid) VALUES (?)`
-    const SQLQuery2 = `INSERT INTO users (user_uid, user_role_id, verified_status_uuid, email, username, image_url, phone_number) VALUES (?, ?, ?, ?, ?, ?, ?)`
+const registerUsers = async (uid, email, phone_number, username, uuid, defaultRole) => {    
+    const SQLQuery1 = `INSERT INTO verified_status (verified_status_uuid) VALUES (?)`
+    const SQLQuery2 = `INSERT INTO users (user_uid, user_role_uuid, verified_status_uuid, email, username, image_url, phone_number) VALUES (?, ${defaultRole}, ?, ?, ?, ?, ?)`
     
     const values1 = [uuid]
     const values2 = [
         uid,
-        1,
         uuid,
         email,
         username,
@@ -50,7 +49,12 @@ const getCurrentUser = (uid) => {
                         users.created_at,
                         users.updated_at
                       FROM users
-                      INNER JOIN user_roles ON users.user_role_id = user_roles.user_role_id WHERE user_uid="${uid}"`;
+                      INNER JOIN user_roles ON users.user_role_uuid = user_roles.user_role_uuid WHERE user_uid="${uid}"`;
+    return dbPool.execute(SQLQuery);
+}
+
+const getDefaultUserRole = () => {
+    const SQLQuery = `SELECT user_role_uuid FROM user_roles WHERE name LIKE '%user%';`
     return dbPool.execute(SQLQuery);
 }
 
@@ -58,4 +62,5 @@ module.exports = {
     getAllUsers,
     registerUsers,
     getCurrentUser,
+    getDefaultUserRole,
 }
