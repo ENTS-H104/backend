@@ -20,10 +20,9 @@ app.use('/users', usersRoutes)
 app.use('/users/user-roles', userRolesRoutes)
 app.use('/mountains', mountainsRoutes)
 
-
 // Domain Response
 app.get('/', (req, res) => {
-    res.status(200).send('<h1>HighKing Api, is ready to use!</h1>');
+    res.status(200).send('<h1>HighKing Api</h1>');
 });
 
 app.listen(PORT, () => {
