@@ -6,6 +6,7 @@ const middlewareLogRequest = require('./middleware/log')
 
 const usersRoutes = require('./routes/users')
 const userRolesRoutes = require('./routes/userRoles') 
+const mountainsRoutes = require('./routes/mountains')
 
 const app = express();
 
@@ -17,13 +18,13 @@ app.use(express.json())
 // Routes
 app.use('/users', usersRoutes)
 app.use('/users/user-roles', userRolesRoutes)
-
+app.use('/mountains', mountainsRoutes)
 
 // Domain Response
 app.get('/', (req, res) => {
-    res.status(200).send('<h1>Good Response, Enjoy Designing Masbro</h1>');
+    res.status(200).send('<h1>HighKing Api</h1>');
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running port ${PORT}`)
+    console.log(`Server running`)
 })
