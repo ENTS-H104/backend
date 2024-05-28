@@ -9,6 +9,7 @@ const userRolesRoutes = require('./routes/userRoles')
 const mountainsRoutes = require('./routes/mountains')
 const partnerRolesRoutes = require('./routes/partnerRoles')
 const partnerRoutes = require('./routes/partners')
+const openTripsRoutes = require('./routes/openTrips')
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use('/users/user-roles', userRolesRoutes)
 app.use('/mountains', mountainsRoutes)
 app.use('/partners/partner-roles', partnerRolesRoutes)
 app.use('/partners', partnerRoutes)
+app.use('/open-trips', openTripsRoutes)
 
 // Domain Response
 app.get('/', (req, res) => {
