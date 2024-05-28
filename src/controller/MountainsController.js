@@ -7,7 +7,7 @@ const axios = require('axios');
 // Inisialisasi Google Cloud Storage
 const storage = new Storage({
     projectId: 'ents-h104-staging',
-    keyFilename: '../backend/src/config/cloud_storage_serviceaccount.json'
+    keyFilename: '../backend/src/config/service/cloud_storage_serviceaccount.json'
 });
 
 const bucket = storage.bucket('ents-h104-mountain');
@@ -42,10 +42,9 @@ const getMountainWeatherById = async (req, res) => {
 
     const mountain = rows[0];
     const { lat, lon } = mountain;
-    const OPENWEATHER_API_KEY = '182150465a6bd1db5b61c9c35b05dce0';
 
     // Fetch weather data from OpenWeather API using Axios
-    const weatherResponse = await axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&lang=id`);
+    const weatherResponse = await axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${process.env.API_OPEN_WEATHER_API}&lang=id`);
     const weatherData = weatherResponse.data;
 
     // Combine mountain data with weather data
