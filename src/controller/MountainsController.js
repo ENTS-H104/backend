@@ -5,12 +5,9 @@ const { Storage } = require('@google-cloud/storage');
 const axios = require('axios');
 
 // Inisialisasi Google Cloud Storage
-const storage = new Storage({
-    projectId: 'ents-h104-staging',
-    keyFilename: '../backend/src/config/service/cloud_storage_serviceaccount.json'
-});
+const storage = new Storage()
 
-const bucket = storage.bucket('ents-h104-mountain');
+const bucket = storage.bucket(process.env.CLOUD_STORAGE_BUCKET_NAME);
 
 const getAllMountains = async (req, res) => {
     try {
