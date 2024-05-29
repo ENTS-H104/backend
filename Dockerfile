@@ -2,7 +2,7 @@
 FROM node:18.20.0
 
 # Set the working directory in the container
-WORKDIR /app
+WORKDIR /backend
 
 # Copy the rest of the application code
 COPY . .
