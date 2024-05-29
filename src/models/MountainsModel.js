@@ -2,7 +2,7 @@ const dbPool = require('../config/database')
 
 const getAllMountains = () => {
     const SQLQuery = `SELECT mountain.mountain_uuid,
-                        mountain.mountain_uuid 
+                        mountain.mountain_uuid,
                         mountain.name, 
                         mountain.image_url,
                         mountain.description,
@@ -24,7 +24,7 @@ const getAllMountains = () => {
 
 const getMountainById = (id) => {
     const SQLQuery = `SELECT mountain.mountain_uuid,
-                        mountain.mountain_uuid 
+                        mountain.mountain_uuid,
                         mountain.name, 
                         mountain.image_url,
                         mountain.description,
