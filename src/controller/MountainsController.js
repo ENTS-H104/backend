@@ -1,26 +1,20 @@
 const moment = require('moment-timezone');
-
+const { v4: uuidv4 } = require('uuid');
 const mountainsModel = require ('../models/MountainsModel')
 const { Storage } = require('@google-cloud/storage');
+const axios = require('axios');
 
 // Inisialisasi Google Cloud Storage
 const storage = new Storage({
-    projectId: 'ents-h104-db',
-    keyFilename: '../config/cloud_storage_serviceaccount.json'
+    projectId: 'ents-h104-staging',
+    keyFilename: '../backend/src/config/service/cloud_storage_serviceaccount.json'
 });
 
-const bucket = storage.bucket('ents-h104-db');
+const bucket = storage.bucket('ents-h104-mountain');
 
 const getAllMountains = async (req, res) => {
     try {
         const [ data ] = await mountainsModel.getAllMountains();
-        
-        // Convert UTC timestamps to UTC+7
-        // const dataWithLocalTime = data.map(data => ({
-        //     ...data,
-        //     created_at: moment.utc(data.created_at).tz('Asia/Bangkok').format(),
-        //     updated_at: moment.utc(data.updated_at).tz('Asia/Bangkok').format()
-        // }));
         
         res.status(200).json({
             status: 200,
@@ -35,15 +29,51 @@ const getAllMountains = async (req, res) => {
         })
     }
 }
+
+
+const getMountainWeatherById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await mountainsModel.getMountainById(id);
+
+    if (rows.length === 0) {
+      return res.status(404).send({ message: 'Mountain not found' });
+    }
+
+    const mountain = rows[0];
+    const { lat, lon } = mountain;
+
+    // Fetch weather data from OpenWeather API using Axios
+    const weatherResponse = await axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${process.env.API_OPEN_WEATHER_API}&lang=id`);
+    const weatherData = weatherResponse.data;
+
+    // Combine mountain data with weather data
+    const combinedData = {
+      ...mountain,
+      weather: {
+        temperature: (weatherData.main.temp - 273.15).toFixed(2),
+        cuaca: weatherData.weather[0].description,
+        // icon: weatherData.weather[0].icon,
+      },
+    };
+
+    res.status(200).json(combinedData);
+  } catch (err) {
+    console.error('Error fetching mountain or weather data:', err);
+    res.status(500).send({ message: 'Internal server error' });
+  }
+};
+
 const uploadMountain = async (req, res) => {
     try {
-      const { name, description, high, status, lat, lon } = req.body;
+      const { name, description, height, status, lat, lon, magmaCategory, province, harga, gmaps } = req.body;
   
       if (!req.file) {
         return res.status(400).send('No file uploaded.');
       }
-  
-      const blob = bucket.file(req.file.originalname);
+      const jakartaTime = moment().tz('Asia/Jakarta').format('YYYYMMDD_HHmmss');
+      const blobName = `mountain/${Date.now()}_${jakartaTime}_${req.file.originalname}`;
+      const blob = bucket.file(blobName);
       const blobStream = blob.createWriteStream({
         resumable: false,
       });
@@ -57,17 +87,22 @@ const uploadMountain = async (req, res) => {
         const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
   
         try {
-          const [result] = await mountainsModel.createMountain(name, publicUrl, description, high, status, lat, lon);
+          const uuid = uuidv4();
+          const [result] = await mountainsModel.createMountain(uuid, name, publicUrl, description, height, status, lat, lon, magmaCategory, province, harga, gmaps);
           res.status(200).send({
             message: 'Mountain entry created successfully',
-            id: result.insertId,
+            id: uuid,
             name,
             image_url: publicUrl,
             description,
-            high,
+            height,
             status,
             lat,
-            lon,
+            lon, 
+            magmaCategory, 
+            province, 
+            harga, 
+            gmaps
           });
         } catch (dbError) {
           console.error('Database error:', dbError);
@@ -84,5 +119,6 @@ const uploadMountain = async (req, res) => {
 
 module.exports = {
     getAllMountains,
-    uploadMountain
+    uploadMountain,
+    getMountainWeatherById
 }

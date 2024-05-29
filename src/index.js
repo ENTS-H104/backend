@@ -7,6 +7,9 @@ const middlewareLogRequest = require('./middleware/log')
 const usersRoutes = require('./routes/users')
 const userRolesRoutes = require('./routes/userRoles') 
 const mountainsRoutes = require('./routes/mountains')
+const partnerRolesRoutes = require('./routes/partnerRoles')
+const partnerRoutes = require('./routes/partners')
+const openTripsRoutes = require('./routes/openTrips')
 
 const app = express();
 
@@ -19,11 +22,13 @@ app.use(express.json())
 app.use('/users', usersRoutes)
 app.use('/users/user-roles', userRolesRoutes)
 app.use('/mountains', mountainsRoutes)
-
+app.use('/partners/partner-roles', partnerRolesRoutes)
+app.use('/partners', partnerRoutes)
+app.use('/open-trips', openTripsRoutes)
 
 // Domain Response
 app.get('/', (req, res) => {
-    res.status(200).send('<h1>HighKing Api, is ready to use!</h1>');
+    res.status(200).send('<h1>HighKing Api</h1>');
 });
 
 app.listen(PORT, () => {
