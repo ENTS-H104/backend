@@ -18,6 +18,7 @@ const createTransaction = async (req, res) => {
             try {
                 const openTripPrice = await TransactionModel.getPriceAndSeatAvailableOpenTrips(open_trip_uuid);
                 if (openTripPrice[0][0].total_seat_available <= 0) {
+                    console.log(openTripPrice[0][0].total_seat_available)
                     return res.status(400).json({ message: 'No seats available' });
                 }
                 const amount_paid = openTripPrice[0][0].price * total_participant;
@@ -70,33 +71,37 @@ const createTransaction = async (req, res) => {
                     }
                 };
     
-                // Get Midtrans snap token
+                try {
+                    // Get Midtrans snap token
                 snap.createTransaction(transactionParams)
-                    .then((transaction) => {
-                        // Transaction token
-                        const transactionToken = transaction.token;
-                        console.log(transactionToken)
-    
-                        res.status(201).json({
-                            message: 'Transaction created successfully',
-                            data: {
-                                transaction_logs_uuid,
-                                user_uid,
-                                open_trip_uuid,
-                                status: "PENDING",
-                                total_participant,
-                                amount_paid,
-                                participants: participantsData,
-                                payment_gateway : payment[0][0].payment_gateway_name,
-                                transaction_token: transactionToken
-                            }
-                        });
-                    })
-                    .catch((error) => {
-                        TransactionModel.deleteTransaction(transaction_logs_uuid);
-                        console.error('Midtrans transaction error:', error);
-                        res.status(500).json({ error: 'Failed to create Midtrans transaction' });
+                .then((transaction) => {
+                    // Transaction token
+                    const transactionToken = transaction.token;
+                    console.log(transactionToken)
+
+                    res.status(201).json({
+                        message: 'Transaction created successfully',
+                        data: {
+                            transaction_logs_uuid,
+                            user_uid,
+                            open_trip_uuid,
+                            status: "PENDING",
+                            total_participant,
+                            amount_paid,
+                            participants: participantsData,
+                            payment_gateway : payment[0][0].payment_gateway_name,
+                            transaction_token: transactionToken
+                        }
                     });
+                })
+                .catch((error) => {
+                    TransactionModel.deleteTransaction(transaction_logs_uuid);
+                    res.status(500).json({ error: 'Failed to create Midtrans transaction' });
+                });
+                } catch (error) {
+                    res.status(500).json({ error: 'Failed to create Midtrans transaction' });
+                }
+                
     
             } catch (error) {
                 console.error(error);

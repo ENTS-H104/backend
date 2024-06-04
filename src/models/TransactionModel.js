@@ -8,9 +8,9 @@ const createTransaction = (transaction_logs_uuid, user_uid, open_trip_uuid, stat
 };
 
 const getPriceAndSeatAvailableOpenTrips = (uuid) => {
-    const sql = `SELECT ot.price, (ot.max_people-SUM(tl.total_participant)) total_seat_available 
+    const sql = `SELECT ot.price, (ot.max_people-COALESCE(SUM(tl.total_participant), 0)) total_seat_available 
                     FROM open_trips ot
-                    JOIN transaction_logs tl 
+                    LEFT JOIN transaction_logs tl 
                     ON ot.open_trip_uuid = tl.open_trip_uuid OR tl.status_accepted = "ACCEPTED" OR tl.status_payment="PENDING"
                     WHERE ot.open_trip_uuid = ?`;
     return dbPool.execute(sql, [uuid]);
