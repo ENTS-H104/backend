@@ -15,6 +15,7 @@ const FaqsRoutes = require('./routes/FaqsRoutes')
 const searcOpenTripsRoutes = require('./routes/searchOpenTrips')
 const transactionRoutes = require('./routes/transaction')
 const paymentGatewayRoutes = require('./routes/paymentGateway')
+const MessagesRoutes = require('./routes/MessagesRoutes')
 
 const app = express();
 
@@ -27,10 +28,10 @@ app.use(express.json())
 app.use('/users', usersRoutes)
 app.use('/users/user-roles', userRolesRoutes)
 
-app.use('/mountains', mountainsRoutes)
-
-app.use('/partners/partner-roles', partnerRolesRoutes)
 app.use('/partners', partnerRoutes)
+app.use('/partners/partner-roles', partnerRolesRoutes)
+ 
+app.use('/mountains', mountainsRoutes)
 
 app.use('/open-trips', openTripsRoutes)
 app.use('/open-trips/schedules', SchedulesDescRoutes)
@@ -39,6 +40,8 @@ app.use('/search-ot', searcOpenTripsRoutes)
 app.use('/transaction', transactionRoutes)
 app.use('/payment-gateway', paymentGatewayRoutes)
 
+
+app.use('/messages', MessagesRoutes)
 
 // Domain Response
 app.get('/', (req, res) => {
