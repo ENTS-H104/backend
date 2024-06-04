@@ -26,7 +26,7 @@ app.use(express.json())
 
 // Routes
 app.use('/api/users', usersRoutes)
-app.use('/users/user-roles', userRolesRoutes)
+app.use('/api/users/user-roles', userRolesRoutes)
 
 app.use('/api/partners', partnerRoutes)
 app.use('/api/partners/partner-roles', partnerRolesRoutes)
