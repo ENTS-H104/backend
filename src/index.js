@@ -12,6 +12,9 @@ const partnerRoutes = require('./routes/partners')
 const openTripsRoutes = require('./routes/openTrips')
 const SchedulesDescRoutes = require('./routes/SchedulesDescRoutes')
 const FaqsRoutes = require('./routes/FaqsRoutes')
+const searcOpenTripsRoutes = require('./routes/searchOpenTrips')
+const transactionRoutes = require('./routes/transaction')
+const paymentGatewayRoutes = require('./routes/paymentGateway')
 
 const app = express();
 
@@ -32,6 +35,10 @@ app.use('/partners', partnerRoutes)
 app.use('/open-trips', openTripsRoutes)
 app.use('/open-trips/schedules', SchedulesDescRoutes)
 app.use('/open-trips/faqs', FaqsRoutes)
+app.use('/search-ot', searcOpenTripsRoutes)
+app.use('/transaction', transactionRoutes)
+app.use('/payment-gateway', paymentGatewayRoutes)
+
 
 // Domain Response
 app.get('/', (req, res) => {
