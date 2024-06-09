@@ -3,7 +3,7 @@ const express = require('express');
 const MessagesController = require('../controller/MessagesController')
 const router = express.Router();
 
-router.get('/', MessagesController.getMessageUserSide);
+router.post('/', MessagesController.getMessageUserSide);
 
 router.get('/:user_uid', MessagesController.getAllMessageUserSide);
 

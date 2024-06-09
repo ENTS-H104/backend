@@ -12,6 +12,9 @@ const partnerRoutes = require('./routes/partners')
 const openTripsRoutes = require('./routes/openTrips')
 const SchedulesDescRoutes = require('./routes/SchedulesDescRoutes')
 const FaqsRoutes = require('./routes/FaqsRoutes')
+const searcOpenTripsRoutes = require('./routes/searchOpenTrips')
+const transactionRoutes = require('./routes/transaction')
+const paymentGatewayRoutes = require('./routes/paymentGateway')
 const MessagesRoutes = require('./routes/MessagesRoutes')
 
 const app = express();
@@ -22,22 +25,27 @@ app.use(middlewareLogRequest)
 app.use(express.json())
 
 // Routes
-app.use('/users', usersRoutes)
-app.use('/users/user-roles', userRolesRoutes)
+app.use('/api/users', usersRoutes)
+app.use('/api/users/user-roles', userRolesRoutes)
 
-app.use('/partners', partnerRoutes)
-app.use('/partners/partner-roles', partnerRolesRoutes)
+app.use('/api/partners', partnerRoutes)
+app.use('/api/partners/partner-roles', partnerRolesRoutes)
  
-app.use('/mountains', mountainsRoutes)
+app.use('/api/mountains', mountainsRoutes)
 
-app.use('/open-trips', openTripsRoutes)
-app.use('/open-trips/schedules', SchedulesDescRoutes)
-app.use('/open-trips/faqs', FaqsRoutes)
+app.use('/api/open-trips', openTripsRoutes)
+app.use('/api/open-trips/schedules', SchedulesDescRoutes)
+app.use('/api/open-trips/faqs', FaqsRoutes)
 
-app.use('/messages', MessagesRoutes)
+app.use('/api/search-ot', searcOpenTripsRoutes)
+
+app.use('/api/transaction', transactionRoutes)
+app.use('/api/payment-gateway', paymentGatewayRoutes)
+
+app.use('/api/messages', MessagesRoutes)
 
 // Domain Response
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
     res.status(200).send('<h1>HighKing Api</h1>');
 });
 
