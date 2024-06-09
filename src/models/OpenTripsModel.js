@@ -55,6 +55,28 @@ const getAllOpenTrips = () => {
     return dbPool.execute(SQLQuery);
 }
 
+const getAllOpenTrips2 = () => {
+    const SQLQuery = `SELECT 
+                            ot.open_trip_uuid,
+                            ot.name,
+                            ot.image_url,
+                            ot.price,
+                            mountain.name AS mountain_name,
+                            mountain.mountain_uuid,
+                            COALESCE(SUM(tl.total_participant), 0) AS total_participants
+                        FROM 
+                            open_trips ot 
+                        JOIN 
+                            open_trip_schedules ots ON ot.open_trip_schedule_uuid = ots.open_trip_schedule_uuid 
+                        JOIN 
+                            mountains mountain ON ot.mountain_uuid = mountain.mountain_uuid
+                        LEFT JOIN 
+                            transaction_logs tl ON ot.open_trip_uuid = tl.open_trip_uuid OR tl.status_accepted = "ACCEPTED" OR tl.status_payment="PENDING"
+                        GROUP BY 
+                            ot.open_trip_uuid`;
+    return dbPool.execute(SQLQuery);
+}
+
 const getAllOpenTripsById = (open_trip_uuid) => {
     const SQLQuery = `SELECT * FROM open_trips WHERE open_trip_uuid LIKE '%${open_trip_uuid}%'`;
     return dbPool.execute(SQLQuery);
@@ -79,6 +101,29 @@ const getPartnerOpenTrip = (partner_uid) => {
                             m.image_url,
                             m.gmaps
                         FROM open_trips ot RIGHT JOIN mountains m ON ot.mountain_uuid = m.mountain_uuid WHERE partner_uid LIKE '%${partner_uid}%'`;
+    return dbPool.execute(SQLQuery);
+}
+
+const getPartnerOpenTrip2 = (partner_uid) => {
+    const SQLQuery = `SELECT 
+                            ot.open_trip_uuid,
+                            ot.name,
+                            ot.image_url,
+                            ot.price,
+                            mountain.name AS mountain_name,
+                            mountain.mountain_uuid,
+                            COALESCE(SUM(tl.total_participant), 0) AS total_participants
+                        FROM 
+                            open_trips ot 
+                        JOIN 
+                            open_trip_schedules ots ON ot.open_trip_schedule_uuid = ots.open_trip_schedule_uuid 
+                        JOIN 
+                            mountains mountain ON ot.mountain_uuid = mountain.mountain_uuid
+                        LEFT JOIN 
+                            transaction_logs tl ON ot.open_trip_uuid = tl.open_trip_uuid OR tl.status_accepted = "ACCEPTED" OR tl.status_payment="PENDING"
+                        WHERE ot.partner_uid LIKE '%${partner_uid}%'
+                        GROUP BY 
+                            ot.open_trip_uuid`;
     return dbPool.execute(SQLQuery);
 }
 
@@ -131,5 +176,7 @@ module.exports = {
     getRundownByOpenTrip,
     getFaqByOpenTrip,
     getPartnerProfile,
-    getPartnerOpenTrip
+    getPartnerOpenTrip,
+    getPartnerOpenTrip2,
+    getAllOpenTrips2
 }
