@@ -61,9 +61,37 @@ const getDefaultPartnerRole = () => {
     return dbPool.execute(SQLQuery);
 }
 
+const getPartnerById = (partner_uid) => {
+    const SQLQuery = `SELECT * FROM partners WHERE partner_uid="${partner_uid}"`;
+    return dbPool.execute(SQLQuery);
+}
+
+const updateProfilePartner = (body, updated_at, partner_uid) => {
+    const setClauses = [];
+
+    for (const key in body) {
+        setClauses.push(`${key}="${body[key]}"`);
+    }
+
+    const SQLQuery = `UPDATE partners 
+                      SET ${setClauses.join(', ')}, updated_at="${updated_at}"
+                      WHERE partner_uid="${partner_uid}"`;
+    return dbPool.execute(SQLQuery);
+}
+
+const updatePhotoProfilePartner = (publicUrl, updated_at, partner_uid) => {
+    const SQLQuery = `UPDATE partners 
+                      SET image_url="${publicUrl}", updated_at="${updated_at}"
+                      WHERE partner_uid="${partner_uid}"`;
+    return dbPool.execute(SQLQuery);
+}
+
 module.exports = {
     getAllPartners,
     registerPartners,
     getCurrentPartners,
     getDefaultPartnerRole,
+    getPartnerById,
+    updateProfilePartner,
+    updatePhotoProfilePartner
 }

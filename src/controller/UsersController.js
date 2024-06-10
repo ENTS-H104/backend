@@ -2,6 +2,7 @@ const moment = require('moment-timezone');
 const UsersModel = require ('../models/UsersModel')
 const { auth } = require('../config/firebase');
 const { v4: uuidv4 } = require('uuid');
+const { Storage } = require('@google-cloud/storage');
 const {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
@@ -9,9 +10,12 @@ const {
     updateProfile,
     sendPasswordResetEmail,
     } = require('firebase/auth');
-
-const jwt = require('jsonwebtoken');
-const blacklist = new Set();
+    
+    const jwt = require('jsonwebtoken');
+    const blacklist = new Set();
+    
+const storage = new Storage()
+const bucket = storage.bucket(process.env.CLOUD_STORAGE_BUCKET_NAME);
 
 const getAllUsers = async (req, res) => {
     try {
@@ -274,6 +278,110 @@ const forgotPasswordUsers = async (req, res) => {
     }
 }
 
+const updateProfileUser = async (req, res) => {
+    try {
+        const { user_uid } = req.params; 
+        const { body } = req
+        
+        // Check if the body contains only the required fields
+        const allowedFields = ['username', 'phone_number'];
+        const receivedFields = Object.keys(body);
+        const invalidFields = receivedFields.filter(field => !allowedFields.includes(field));
+
+        if (invalidFields.length > 0) {
+            return res.status(400).json({
+                status: 400,
+                message: "Bad Request. Invalid fields found, please input `username` or `phone_number` only!",
+                invalidFields: invalidFields
+            });
+        }
+        
+        const [ data ] = await UsersModel.getUserById(user_uid);
+        
+        if (data.length === 1)
+        {
+            const updated_at = moment().tz('Asia/Bangkok').format('YYYY-MM-DD HH:mm:ss');
+            await UsersModel.updateProfileUser(body, updated_at, user_uid);
+            res.status(200).json({
+                status: 200,
+                message: `Successfully update user with uid: ${user_uid}`,
+                data: body
+            })
+        } else {
+            res.status(404).json({
+                status: 404,
+                message: `Role with uuid: ${user_uid} not found`,
+            })
+        }
+    } catch (error) {
+        res.status(500).json({
+            message: "Server Error",
+            serverMessage: error,
+        })
+    }
+}
+
+const updatePhotoProfileUser = async (req, res) => {
+    try {
+        const { user_uid } = req.params;
+        const { file } = req;
+
+        if (!file) {
+            return res.status(400).json({ message: 'No file uploaded.' });
+        }
+
+        // Create a new blob in the bucket and upload the file data
+        const jakartaTime = moment().tz('Asia/Jakarta').format('YYYYMMDD_HHmmss');
+        const blobName = `users/profile/${Date.now()}_${jakartaTime}_${req.file.originalname}`;
+        const blob = bucket.file(blobName);
+        const blobStream = blob.createWriteStream({
+            resumable: false,
+        });
+
+        blobStream.on('finish', async () => {
+            // The public URL can be used to access the file via HTTP
+            const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+
+            try {
+                const updated_at = moment().tz('Asia/Bangkok').format('YYYY-MM-DD HH:mm:ss');
+                await UsersModel.updatePhotoProfileUser(publicUrl, updated_at, user_uid);
+            } catch (error) {
+                res.status(500).json({
+                    status: 500,
+                    message: 'Server Error',
+                    serverMessage: error.message,
+                });
+                return 0
+            }
+
+
+            res.status(200).json({
+                status: 200,
+                message: 'Photo profile successfully updated',
+                data: {
+                    image_url: publicUrl
+                }
+            });
+        });
+
+        blobStream.on('error', (err) => {
+            res.status(500).json({
+                status: 500,
+                message: 'Unable to upload file.',
+                serverMessage: err.message,
+            });
+            return 0
+        });
+
+        blobStream.end(file.buffer);
+    } catch (error) {
+        res.status(500).json({
+            message: "Server Error",
+            serverMessage: error,
+        })
+    }
+}
+
 module.exports = {
     getAllUsers,
     registerUsers,
@@ -281,4 +389,6 @@ module.exports = {
     logoutUsers,
     forgotPasswordUsers,
     currentUsers,
+    updateProfileUser,
+    updatePhotoProfileUser
 }
