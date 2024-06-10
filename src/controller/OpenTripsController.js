@@ -10,26 +10,12 @@ const bucket = storage.bucket(process.env.CLOUD_STORAGE_BUCKET_NAME);
 
 const getAllOpenTrips = async (req, res) => {
     try {
-        const [ data ] = await OpenTripsModel.getAllOpenTrips();
-        
-        // Fetch mountain data for each open trip
-        const dataWithMountainData = await Promise.all(data.map(async (trip) => {
-            const [ mountain_data ] = await OpenTripsModel.getAllMountainByOpenTrip(trip.mountain_uuid);
-            return {
-                open_trip_uuid: trip.open_trip_uuid,
-                open_trip_name: trip.name,
-                image_url: trip.image_url,
-                price: trip.price,
-                min_people: trip.min_people,
-                max_people: trip.max_people,
-                mountain_data,
-            };
-        }));
+        const [ data ] = await OpenTripsModel.getAllOpenTrips2();
 
         res.status(200).json({
             status: 200,
-            message: "Open Trips successfully fetched",
-            data: dataWithMountainData
+            message: "Data successfully fetched",
+            data: data
         });
     } catch (error) {
         res.status(500).json({
@@ -93,7 +79,7 @@ const getPartnerProfile = async (req, res) => {
         
         // Fetch mountain data for each open trip
         const dataWithRelationship = await Promise.all(data.map(async (trip) => {
-            const [ open_trip_data ] = await OpenTripsModel.getPartnerOpenTrip(partner_uid);
+            const [ open_trip_data ] = await OpenTripsModel.getPartnerOpenTrip2(partner_uid);
             return {
                 ...trip,
                 created_at: moment.utc(data.created_at).tz('Asia/Bangkok').format(),

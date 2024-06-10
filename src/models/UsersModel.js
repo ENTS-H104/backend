@@ -58,9 +58,37 @@ const getDefaultUserRole = () => {
     return dbPool.execute(SQLQuery);
 }
 
+const getUserById = (user_uid) => {
+    const SQLQuery = `SELECT * FROM users WHERE user_uid="${user_uid}"`;
+    return dbPool.execute(SQLQuery);
+}
+
+const updateProfileUser = (body, updated_at, user_uid) => {
+    const setClauses = [];
+
+    for (const key in body) {
+        setClauses.push(`${key}="${body[key]}"`);
+    }
+
+    const SQLQuery = `UPDATE users 
+                      SET ${setClauses.join(', ')}, updated_at="${updated_at}"
+                      WHERE user_uid="${user_uid}"`;
+    return dbPool.execute(SQLQuery);
+}
+
+const updatePhotoProfileUser = (publicUrl, updated_at, user_uid) => {
+    const SQLQuery = `UPDATE users 
+                      SET image_url="${publicUrl}", updated_at="${updated_at}"
+                      WHERE user_uid="${user_uid}"`;
+    return dbPool.execute(SQLQuery);
+}
+
 module.exports = {
     getAllUsers,
     registerUsers,
     getCurrentUser,
     getDefaultUserRole,
+    getUserById,
+    updateProfileUser,
+    updatePhotoProfileUser
 }

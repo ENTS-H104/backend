@@ -13,6 +13,12 @@ const {
 const jwt = require('jsonwebtoken');
 const blacklist = new Set();
 
+const { Storage } = require('@google-cloud/storage');
+    
+const storage = new Storage()
+const bucket = storage.bucket(process.env.CLOUD_STORAGE_BUCKET_NAME);
+
+
 const getAllPartners = async (req, res) => {
     try {
         const [ data ] = await PartnersModel.getAllPartners();
@@ -276,6 +282,110 @@ const forgotPasswordPartners = async (req, res) => {
     }
 }
 
+const updateProfilePartner = async (req, res) => {
+    try {
+        const { partner_uid } = req.params; 
+        const { body } = req
+        
+        // Check if the body contains only the required fields
+        const allowedFields = ['username', 'phone_number', 'domicile_address'];
+        const receivedFields = Object.keys(body);
+        const invalidFields = receivedFields.filter(field => !allowedFields.includes(field));
+
+        if (invalidFields.length > 0) {
+            return res.status(400).json({
+                status: 400,
+                message: "Bad Request. Invalid fields found, please input `username`, `phone_number`, `domicile_address` only!",
+                invalidFields: invalidFields
+            });
+        }
+        
+        const [ data ] = await PartnersModel.getPartnerById(partner_uid);
+        
+        if (data.length === 1)
+        {
+            const updated_at = moment().tz('Asia/Bangkok').format('YYYY-MM-DD HH:mm:ss');
+            await PartnersModel.updateProfilePartner(body, updated_at, partner_uid);
+            res.status(200).json({
+                status: 200,
+                message: `Successfully update mitra with uid: ${partner_uid}`,
+                data: body
+            })
+        } else {
+            res.status(404).json({
+                status: 404,
+                message: `Role with uuid: ${partner_uid} not found`,
+            })
+        }
+    } catch (error) {
+        res.status(500).json({
+            message: "Server Error",
+            serverMessage: error,
+        })
+    }
+}
+
+const updatePhotoProfilePartner = async (req, res) => {
+    try {
+        const { partner_uid } = req.params;
+        const { file } = req;
+
+        if (!file) {
+            return res.status(400).json({ message: 'No file uploaded.' });
+        }
+
+        // Create a new blob in the bucket and upload the file data
+        const jakartaTime = moment().tz('Asia/Jakarta').format('YYYYMMDD_HHmmss');
+        const blobName = `users/profile/${Date.now()}_${jakartaTime}_${req.file.originalname}`;
+        const blob = bucket.file(blobName);
+        const blobStream = blob.createWriteStream({
+            resumable: false,
+        });
+
+        blobStream.on('finish', async () => {
+            // The public URL can be used to access the file via HTTP
+            const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+
+            try {
+                const updated_at = moment().tz('Asia/Bangkok').format('YYYY-MM-DD HH:mm:ss');
+                await PartnersModel.updatePhotoProfilePartner(publicUrl, updated_at, partner_uid);
+            } catch (error) {
+                res.status(500).json({
+                    status: 500,
+                    message: 'Server Error',
+                    serverMessage: error.message,
+                });
+                return 0
+            }
+
+
+            res.status(200).json({
+                status: 200,
+                message: 'Photo profile successfully updated',
+                data: {
+                    image_url: publicUrl
+                }
+            });
+        });
+
+        blobStream.on('error', (err) => {
+            res.status(500).json({
+                status: 500,
+                message: 'Unable to upload file.',
+                serverMessage: err.message,
+            });
+            return 0
+        });
+
+        blobStream.end(file.buffer);
+    } catch (error) {
+        res.status(500).json({
+            message: "Server Error",
+            serverMessage: error,
+        })
+    }
+}
+
 module.exports = {
     getAllPartners,
     registerPartners,
@@ -283,4 +393,6 @@ module.exports = {
     logoutPartners,
     forgotPasswordPartners,
     currentPartners,
+    updateProfilePartner,
+    updatePhotoProfilePartner
 }
