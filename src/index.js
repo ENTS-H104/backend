@@ -53,7 +53,7 @@ app.get('/api', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.status(200).send('<meta http-equiv="refresh" content="0; url=https://highking-partners-web.vercel.app/" />');
+    res.status(200).send('<meta http-equiv="refresh" content="0; url=https://mitra.highking.cloud" />');
 });
 
 app.listen(PORT, () => {
