@@ -1,6 +1,6 @@
 const dbPool = require('../config/database')
 
-const getOpenTripAvailableByIdAndDate = (mountain_id, date) => {
+const getOpenTripAvailableByIdAndDate = (mountain_id, from_date, to_date) => {
     const SQLQuery = `SELECT 
                             ot.open_trip_uuid,
                             ot.name,
@@ -19,11 +19,12 @@ const getOpenTripAvailableByIdAndDate = (mountain_id, date) => {
                             transaction_logs tl ON ot.open_trip_uuid = tl.open_trip_uuid OR tl.status_accepted = "ACCEPTED" OR tl.status_payment="PENDING"
                         WHERE 
                             ot.mountain_uuid = ? 
-                            AND ots.start_date >= ?
+                            AND ots.start_date >= ? 
+                            AND ots.start_date <= ?
                         GROUP BY 
                             ot.open_trip_uuid`;
 
-    return dbPool.execute(SQLQuery, [mountain_id, date]);
+    return dbPool.execute(SQLQuery, [mountain_id, from_date, to_date]);
 }
 
 module.exports = {

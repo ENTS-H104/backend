@@ -82,6 +82,24 @@ const getUserIdByTransactionId = (uuid) => {
     return dbPool.execute(sql, [uuid]);
 };
 
+const getDetailTransaction = (uuid) => {
+    const sql = `SELECT 
+                    tl.token,
+                    ot.name,
+                    partners.phone_number,
+                    ots.start_date,
+                    ots.start_time,
+                    ot.meeting_point,
+                    GROUP_CONCAT(participants.name) AS name_participant
+                    FROM transaction_logs tl
+                JOIN open_trips ot ON tl.open_trip_uuid=ot.open_trip_uuid
+                JOIN open_trip_schedules ots ON ots.open_trip_schedule_uuid=ot.open_trip_schedule_uuid
+                JOIN participants ON tl.transaction_logs_uuid=participants.transaction_logs_uuid
+                JOIN partners ON partners.partner_uid=ot.partner_uid
+                WHERE tl.transaction_logs_uuid= ?`;
+    return dbPool.execute(sql, [uuid]);
+};
+
 module.exports = {
     createTransaction,
     getPriceAndSeatAvailableOpenTrips,
@@ -95,5 +113,6 @@ module.exports = {
     updateAcceptedStatus,
     setRefundBalanceOfUser,
     getUserIdByTransactionId,
-    getTransactionByUUid
+    getTransactionByUUid,
+    getDetailTransaction
 }

@@ -178,9 +178,28 @@ const createNewOpenTrips = async (req, res) => {
         });
     }
 };
+const getAllOpenTripsforRec = async (req, res) => {
+    try {
+        const date = moment.tz("Asia/Jakarta").format("YYYY-MM-DD");
+        const [ data ] = await OpenTripsModel.getOpenTripsforRec(date);
+        
+        res.status(200).json({
+            status: 200,
+            message: "Data successfully fetched",
+            data: data
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 500,
+            message: "Server Error",
+            serverMessage: error,
+        })
+    }
+}
 module.exports = {
     createNewOpenTrips,
     getAllOpenTrips,
     getAllOpenTripsById,
-    getPartnerProfile
+    getPartnerProfile,
+    getAllOpenTripsforRec
 }

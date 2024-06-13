@@ -3,14 +3,18 @@ const searchOpenTripModel = require('../models/SearchOpenTripModel');
 
 const searchOpenTrip = async (req, res) => {
     try {
-        let { id, date } = req.query;
+        let { id, from_date, to_date } = req.query;
         
         // If date is null, set it to the current date in Jakarta
-        if (!date) {
-            date = moment.tz("Asia/Jakarta").format("YYYY-MM-DD");
+        if (!id || !from_date || !to_date) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Missing required fields',
+                open  
+              });
         }
         
-        const [data] = await searchOpenTripModel.getOpenTripAvailableByIdAndDate(id, date);
+        const [data] = await searchOpenTripModel.getOpenTripAvailableByIdAndDate(id, from_date, to_date);
         
         res.status(200).json({
             status: 200,

@@ -14,4 +14,6 @@ router.get('/partners/:partner_uid', OpenTripsController.getPartnerProfile);
 
 router.post('/', upload.single('image'), OpenTripsController.createNewOpenTrips);
 
+router.get('/get-open-trip/rec', OpenTripsController.getAllOpenTripsforRec);
+
 module.exports = router;

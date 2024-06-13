@@ -11,7 +11,8 @@ const bucket = storage.bucket(process.env.CLOUD_STORAGE_BUCKET_NAME);
 
 const getAllMountains = async (req, res) => {
     try {
-        const [ data ] = await mountainsModel.getAllMountains();
+        const date = moment.tz("Asia/Jakarta").format("YYYY-MM-DD");
+        const [ data ] = await mountainsModel.getAllMountains(date);
         
         res.status(200).json({
             status: 200,

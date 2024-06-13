@@ -1,6 +1,6 @@
 const dbPool = require('../config/database')
 
-const getAllMountains = () => {
+const getAllMountains = (date) => {
     const SQLQuery = `SELECT mountain.mountain_uuid,
                         mountain.mountain_uuid,
                         mountain.name, 
@@ -16,10 +16,11 @@ const getAllMountains = () => {
                         mountain.gmaps, 
                         COUNT(ot.open_trip_uuid) total_trip_open
                     FROM mountains mountain
-                    LEFT JOIN open_trips ot
-                    ON mountain.mountain_uuid = ot.mountain_uuid
+                    LEFT JOIN open_trips ot ON mountain.mountain_uuid = ot.mountain_uuid
+                    JOIN open_trip_schedules ots ON ots.open_trip_schedule_uuid=ot.open_trip_schedule_uuid
+                    WHERE ots.start_date >= ?
                     group by mountain.mountain_uuid`;
-    return dbPool.execute(SQLQuery);
+    return dbPool.execute(SQLQuery, [date]);
 }
 
 const getMountainById = (id) => {

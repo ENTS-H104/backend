@@ -281,6 +281,7 @@ const updateStatusAccepted = async (req, res) => {
         } else if (status === 'ACCEPTED') {
             await TransactionModel.updateAcceptedStatus(id, 'ACCEPTED');
             const token = shortid.generate();
+            token = token.replace(/[^a-zA-Z0-9]/g, '');
             await TransactionModel.setTokenTransaction(id, token);
             return res.status(200).json({
                 status: 200,
@@ -313,11 +314,11 @@ cron.schedule('* * * * *', async () => { // Runs every minute
     }
 });
 
-const getTransactionById = async (req, res) => {
+const getDetailTransaction = async (req, res) => {
     try {
-        let { id } = req.body;
+        let { transaction_uuid } = req.params;
         
-        const [data] = await TransactionModel.getHistoriesTransaction(id);
+        const [data] = await TransactionModel.getDetailTransaction(transaction_uuid);
         
         res.status(200).json({
             status: 200,
@@ -337,5 +338,6 @@ module.exports = {
     createTransaction,
     handleMidtransNotification,
     getHistoriesTransaction,
-    updateStatusAccepted
+    updateStatusAccepted,
+    getDetailTransaction
 };
