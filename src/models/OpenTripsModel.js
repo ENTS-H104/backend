@@ -131,8 +131,8 @@ const createNewOpenTrips = async (body, uuid, publicUrl, totalDays) => {
 
     const SQLQuery1 = `INSERT INTO open_trip_schedules (open_trip_schedule_uuid, start_date, end_date, start_time, 	end_time, total_day)
                       VALUES (?, ?, ?, ?, ?, ?)`
-    const SQLQuery2 = `INSERT INTO open_trips (open_trip_uuid, mountain_uuid, partner_uid, open_trip_schedule_uuid, name, image_url, description, price, min_people, max_people, policy, include, exclude, gmaps)
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    const SQLQuery2 = `INSERT INTO open_trips (open_trip_uuid, mountain_uuid, partner_uid, open_trip_schedule_uuid, name, image_url, description, price, min_people, max_people, policy, include, exclude, gmaps, meeting_point)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     
     const values1 = [
             `schedule-${uuid}`, 
@@ -157,7 +157,8 @@ const createNewOpenTrips = async (body, uuid, publicUrl, totalDays) => {
             body.policy,
             body.include,
             body.exclude,
-            body.gmaps
+            body.gmaps,
+            "Rumah Bangkit"
     ]
 
     await dbPool.execute(SQLQuery1, values1);

@@ -19,20 +19,30 @@ const bucket = storage.bucket(process.env.CLOUD_STORAGE_BUCKET_NAME);
 
 const getAllUsers = async (req, res) => {
     try {
-        const [ data ] = await UsersModel.getAllUsers();
+        const { api_key } = req.query
+
+        if ( api_key === process.env.API_KEY) {
+            const [ data ] = await UsersModel.getAllUsers();
         
-        // Convert UTC timestamps to UTC+7
-        const dataWithLocalTime = data.map(data => ({
-            ...data,
-            created_at: moment.utc(data.created_at).tz('Asia/Bangkok').format(),
-            updated_at: moment.utc(data.updated_at).tz('Asia/Bangkok').format()
-        }));
-        
-        res.status(200).json({
-            status: 200,
-            message: "Data successfully fetched",
-            data: dataWithLocalTime
-        });
+            // Convert UTC timestamps to UTC+7
+            const dataWithLocalTime = data.map(data => ({
+                ...data,
+                created_at: moment.utc(data.created_at).tz('Asia/Bangkok').format(),
+                updated_at: moment.utc(data.updated_at).tz('Asia/Bangkok').format()
+            }));
+            
+            res.status(200).json({
+                status: 200,
+                message: "Data successfully fetched",
+                data: dataWithLocalTime
+            });
+        } else {
+            res.status(403).json({
+                status: 403,
+                message: "Forbidden",
+            });
+        }
+       
     } catch (error) {
         res.status(500).json({
             status: 500,
