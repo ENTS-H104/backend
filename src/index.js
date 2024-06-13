@@ -52,6 +52,10 @@ app.get('/api', (req, res) => {
     res.status(200).send('<h1>HighKing Api</h1>');
 });
 
+app.get('/', (req, res) => {
+    res.status(200).send('<meta http-equiv="refresh" content="0; url=https://highking-partners-web.vercel.app/" />');
+});
+
 app.listen(PORT, () => {
     console.log(`Server running`)
 })
