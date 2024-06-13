@@ -334,10 +334,31 @@ const getDetailTransaction = async (req, res) => {
     }
 };
 
+const getTransactionByPartnerUUID = async (req, res) => {
+    try {
+        let { partner_uuid } = req.params;
+        
+        const [data] = await TransactionModel.getTransactionByPartnerUUID(partner_uuid);
+        
+        res.status(200).json({
+            status: 200,
+            message: "Data successfully fetched",
+            data: data
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 500,
+            message: "Server Error",
+            serverMessage: error,
+        });
+    }
+};
+
 module.exports = {
     createTransaction,
     handleMidtransNotification,
     getHistoriesTransaction,
     updateStatusAccepted,
-    getDetailTransaction
+    getDetailTransaction,
+    getTransactionByPartnerUUID
 };

@@ -7,4 +7,5 @@ router.post('/midtrans-notification', TransactionController.handleMidtransNotifi
 router.get('/get-histories', TransactionController.getHistoriesTransaction);
 router.post('/update-status-accepted', TransactionController.updateStatusAccepted);
 router.get('/get-detail_transaction/:transaction_uuid', TransactionController.getDetailTransaction);
+router.get('/get-transaction-partneruuid/:partner_uuid', TransactionController.getTransactionByPartnerUUID);
 module.exports = router;
