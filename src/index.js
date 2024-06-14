@@ -48,12 +48,8 @@ app.use('/api/messages', MessagesRoutes)
 app.use('/api/logs', LogStore)
 
 // Domain Response
-app.get('/api', (req, res) => {
-    res.status(200).send('<h1>HighKing Api</h1>');
-});
-
 app.get('/', (req, res) => {
-    res.status(200).send('<meta http-equiv="refresh" content="0; url=https://mitra.highking.cloud" />');
+    res.status(200).send('<h1>HighKing REST API</h1>');
 });
 
 app.listen(PORT, () => {
