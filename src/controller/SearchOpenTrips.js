@@ -30,6 +30,37 @@ const searchOpenTrip = async (req, res) => {
     }
 };
 
+
+const getOpenTripByMountain = async (req, res) => {
+    try {
+        let { id } = req.query;
+        
+        // If date is null, set it to the current date in Jakarta
+        if ( !id ) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Missing required fields',
+                open  
+              });
+        }
+        
+        const [data] = await searchOpenTripModel.getOpenTripByMountain(id);
+        
+        res.status(200).json({
+            status: 200,
+            message: "Data successfully fetched",
+            data: data
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 500,
+            message: "Server Error",
+            serverMessage: error,
+        });
+    }
+};
+
 module.exports = {
-    searchOpenTrip
+    searchOpenTrip,
+    getOpenTripByMountain
 };
