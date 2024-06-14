@@ -17,8 +17,7 @@ const getAllMountains = (date) => {
                         COUNT(ot.open_trip_uuid) total_trip_open
                     FROM mountains mountain
                     LEFT JOIN open_trips ot ON mountain.mountain_uuid = ot.mountain_uuid
-                    JOIN open_trip_schedules ots ON ots.open_trip_schedule_uuid=ot.open_trip_schedule_uuid
-                    WHERE ots.start_date >= ?
+                    LEFT JOIN open_trip_schedules ots ON ots.open_trip_schedule_uuid=ot.open_trip_schedule_uuid AND ots.start_date >= ?
                     group by mountain.mountain_uuid`;
     return dbPool.execute(SQLQuery, [date]);
 }
