@@ -86,6 +86,14 @@ const updatePhotoProfilePartner = (publicUrl, updated_at, partner_uid) => {
     return dbPool.execute(SQLQuery);
 }
 
+const getIfUser = (uid) => {
+    const SQLQuery = `SELECT 
+                        user_roles.name as role
+                      FROM users
+                      INNER JOIN user_roles ON users.user_role_uuid = user_roles.user_role_uuid WHERE user_uid="${uid}"`;
+    return dbPool.execute(SQLQuery);
+}
+
 module.exports = {
     getAllPartners,
     registerPartners,
@@ -93,5 +101,6 @@ module.exports = {
     getDefaultPartnerRole,
     getPartnerById,
     updateProfilePartner,
-    updatePhotoProfilePartner
+    updatePhotoProfilePartner,
+    getIfUser
 }
