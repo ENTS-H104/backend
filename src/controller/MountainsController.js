@@ -5,7 +5,7 @@ const { Storage } = require('@google-cloud/storage');
 const axios = require('axios');
 const firestore = require('../config/firestore');
 const jwt = require('jsonwebtoken');
-const UsersModel = require ('../models/UsersModel')
+// const UsersModel = require ('../models/UsersModel')
 
 
 // Inisialisasi Google Cloud Storage
@@ -15,8 +15,22 @@ const bucket = storage.bucket(process.env.CLOUD_STORAGE_BUCKET_NAME);
 
 const getAllMountains = async (req, res) => {
     try {
-        const date = moment.tz("Asia/Jakarta").format("YYYY-MM-DD");
-        const [ data ] = await mountainsModel.getAllMountains(date);
+        // Destructure page, limit, and offset from query parameters, with default values
+        let { page=1, limit=1000, offset} = req.query;
+
+        // Parse page and limit as integers
+        page = parseInt(page, 10);
+        limit = parseInt(limit, 10);
+
+        // Calculate offset if not provided
+        if (offset === undefined) {
+            offset = (page - 1) * limit;
+        } else {
+            offset = parseInt(offset, 10);
+        }
+
+        // Fetch data with limit and offset for pagination
+        const [ data ] = await mountainsModel.getAllMountains(limit, offset);
         
         res.status(200).json({
             status: 200,
@@ -65,14 +79,14 @@ const getMountainWeatherById = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     const user_uid = decoded.uid;
 
-    const [ isUser ] = await UsersModel.getCurrentUser(decoded.uid);
+    // const [ isUser ] = await UsersModel.getCurrentUser(decoded.uid);
 
-    if (isUser.length === 0 ) {
-        return res.status(401).json({
-            status: 401,
-            message: 'Invalid token'
-        });
-    }
+    // if (isUser.length === 0 ) {
+    //     return res.status(401).json({
+    //         status: 401,
+    //         message: 'Invalid token'
+    //     });
+    // }
 
     if (!id || !user_uid) {
       return res.status(400).json({
