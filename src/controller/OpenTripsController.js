@@ -3,7 +3,7 @@ const moment = require('moment-timezone');
 const { Storage } = require('@google-cloud/storage');
 const firestore = require('../config/firestore');
 const jwt = require('jsonwebtoken');
-const UsersModel = require ('../models/UsersModel')
+// const UsersModel = require ('../models/UsersModel')
 
 
 const OpenTripsModel = require ('../models/OpenTripsModel');
@@ -15,7 +15,7 @@ const bucket = storage.bucket(process.env.CLOUD_STORAGE_BUCKET_NAME);
 const getAllOpenTrips = async (req, res) => {
     try {
         // Destructure page, limit, and offset from query parameters, with default values
-        let { page, limit, offset} = req.query;
+        let { page=1, limit=1000, offset} = req.query;
 
         // Parse page and limit as integers
         page = parseInt(page, 10);
@@ -59,14 +59,14 @@ const getAllOpenTripsById = async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
         const user_uid = decoded.uid;
 
-        const [ isUser ] = await UsersModel.getCurrentUser(decoded.uid);
+        // const [ isUser ] = await UsersModel.getCurrentUser(decoded.uid);
 
-        if (isUser.length === 0 ) {
-            return res.status(401).json({
-                status: 401,
-                message: 'Invalid token'
-            });
-        }
+        // if (isUser.length === 0 ) {
+        //     return res.status(401).json({
+        //         status: 401,
+        //         message: 'Invalid token'
+        //     });
+        // }
   
         if (!open_trip_uuid || !user_uid) {
             return res.status(400).json({
