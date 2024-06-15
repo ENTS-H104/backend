@@ -14,21 +14,47 @@ const bucket = storage.bucket(process.env.CLOUD_STORAGE_BUCKET_NAME);
 
 const getAllOpenTrips = async (req, res) => {
     try {
-        const [ data ] = await OpenTripsModel.getAllOpenTrips2();
+        // Destructure page, limit, and offset from query parameters, with default values
+        let { page, limit, offset} = req.query;
+
+        // Parse page and limit as integers
+        page = parseInt(page, 10);
+        limit = parseInt(limit, 10);
+
+        // Calculate offset if not provided
+        if (offset === undefined) {
+            offset = (page - 1) * limit;
+        } else {
+            offset = parseInt(offset, 10);
+        }
+
+        // Fetch data with limit and offset for pagination
+        const [ data ] = await OpenTripsModel.getAllOpenTrips2(limit, offset);
+        const [ getTotalOpenTrip ] = await OpenTripsModel.totalOpenTrip();
+        const total_data = getTotalOpenTrip[0].total_data
 
         res.status(200).json({
             status: 200,
             message: "Data successfully fetched",
-            data: data
+            data: data,
+            pagination: {
+                page: page,
+                limit: limit,
+                offset: offset,
+                total_data: total_data
+            }
         });
     } catch (error) {
+        console.error('Error fetching open trips:', error);
+
         res.status(500).json({
             status: 500,
             message: "Server Error",
-            serverMessage: error,
+            serverMessage: error.message,
         });
     }
-}
+};
+
 
 const getAllOpenTripsById = async (req, res) => {
     try {
