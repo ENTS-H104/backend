@@ -6,6 +6,7 @@ const getAllMountains = (limit, offset) => {
                         mountain.name, 
                         mountain.image_url,
                         mountain.height,
+                        mountain.province,
                         COUNT(ot.open_trip_uuid) total_trip_open
                     FROM mountains mountain
                     LEFT JOIN open_trips ot ON mountain.mountain_uuid = ot.mountain_uuid
