@@ -147,26 +147,49 @@ const loginUsers = async (req, res) => {
         }
         
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        
-        // Check if email is verified
-        if (userCredential.user.emailVerified) {
-            const token = jwt.sign({ uid: auth.currentUser.uid }, process.env.JWT_SECRET_KEY, { expiresIn: '60d' });
 
-            res.status(201).json({
-                status: 201,
-                message: `User with email: ${email} Successfully login`,
-                token: token
-            });
-            await auth.signOut();
-        } else {
-            // If email is not verified, return 403
-            res.status(403).json({
-                status: 403,
-                code: "not-verified",
-                message: 'Email not verified. Please verify your email before logging in.'
-            });
-            await auth.signOut();
+        try {
+            const [ ifMitra ] = await UsersModel.getIfMitra(userCredential.user.uid);
+            const checkRole = ifMitra[0].role;
+    
+            // Check if its from partners
+            if( checkRole === "mitra" ) {
+                res.status(500).json({
+                    status: 500,
+                    message: "Server Error",
+                    serverMessage: {
+                        code: "auth/invalid-credential",
+                        customData : {},
+                        name: "FirebaseError"
+                    }
+                });
+                await auth.signOut();
+                return 1;
+            }
+            
+            
+        } catch (error) {
+             // Check if email is verified
+            if (userCredential.user.emailVerified) {
+                const token = jwt.sign({ uid: auth.currentUser.uid }, process.env.JWT_SECRET_KEY, { expiresIn: '60d' });
+
+                res.status(201).json({
+                    status: 201,
+                    message: `User with email: ${email} Successfully login`,
+                    token: token
+                });
+                await auth.signOut();
+            } else {
+                // If email is not verified, return 403
+                res.status(403).json({
+                    status: 403,
+                    code: "not-verified",
+                    message: 'Email not verified. Please verify your email before logging in.'
+                });
+                await auth.signOut();
+            }
         }
+
         
     } catch (error) {
         res.status(500).json({
@@ -218,6 +241,14 @@ const currentUsers = async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
         
         const [ data ] = await UsersModel.getCurrentUser(decoded.uid);
+
+        if (data.length === 0 ) {
+            return res.status(401).json({
+                status: 401,
+                message: 'Invalid token'
+            });
+        }
+        
         const dataWithLocalTime = data.map(data => ({
             ...data,
             created_at: moment.utc(data.created_at).tz('Asia/Bangkok').format(),
