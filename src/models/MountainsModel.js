@@ -5,15 +5,7 @@ const getAllMountains = (date) => {
                         mountain.mountain_uuid,
                         mountain.name, 
                         mountain.image_url,
-                        mountain.description,
                         mountain.height,
-                        mountain.status,
-                        mountain.lat,
-                        mountain.lon,
-                        mountain.magmaCategory,
-                        mountain.province, 
-                        mountain.harga,
-                        mountain.gmaps, 
                         COUNT(ot.open_trip_uuid) total_trip_open
                     FROM mountains mountain
                     LEFT JOIN open_trips ot ON mountain.mountain_uuid = ot.mountain_uuid
