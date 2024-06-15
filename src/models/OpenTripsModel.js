@@ -55,10 +55,6 @@ const getAllOpenTrips = () => {
     return dbPool.execute(SQLQuery);
 }
 
-const totalOpenTrip = () => {
-    const SQLQuery = `SELECT COUNT(*) AS total_data FROM open_trips`;
-    return dbPool.execute(SQLQuery);
-}
 
 
 const getAllOpenTrips2 = (limit, offset) => {
