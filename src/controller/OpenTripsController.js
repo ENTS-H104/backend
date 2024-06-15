@@ -30,19 +30,11 @@ const getAllOpenTrips = async (req, res) => {
 
         // Fetch data with limit and offset for pagination
         const [ data ] = await OpenTripsModel.getAllOpenTrips2(limit, offset);
-        const [ getTotalOpenTrip ] = await OpenTripsModel.totalOpenTrip();
-        const total_data = getTotalOpenTrip[0].total_data
 
         res.status(200).json({
             status: 200,
             message: "Data successfully fetched",
             data: data,
-            pagination: {
-                page: page,
-                limit: limit,
-                offset: offset,
-                total_data: total_data
-            }
         });
     } catch (error) {
         console.error('Error fetching open trips:', error);
