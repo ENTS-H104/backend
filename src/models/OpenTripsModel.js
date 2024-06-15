@@ -211,5 +211,4 @@ module.exports = {
     getPartnerOpenTrip2,
     getAllOpenTrips2,
     getOpenTripsforRec,
-    totalOpenTrip
 }
