@@ -3,6 +3,10 @@ const { v4: uuidv4 } = require('uuid');
 const mountainsModel = require ('../models/MountainsModel')
 const { Storage } = require('@google-cloud/storage');
 const axios = require('axios');
+const firestore = require('../config/firestore');
+const jwt = require('jsonwebtoken');
+const UsersModel = require ('../models/UsersModel')
+
 
 // Inisialisasi Google Cloud Storage
 const storage = new Storage()
@@ -55,10 +59,54 @@ const getMountainWeatherById = async (req, res) => {
       },
     };
 
-    res.status(200).json(combinedData);
+    // Check Token
+    const authHeader = req.headers.authorization;
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    const user_uid = decoded.uid;
+
+    const [ isUser ] = await UsersModel.getCurrentUser(decoded.uid);
+
+    if (isUser.length === 0 ) {
+        return res.status(401).json({
+            status: 401,
+            message: 'Invalid token'
+        });
+    }
+
+    if (!id || !user_uid) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Missing required fields',
+      });
+    }
+
+    // Create a timestamp in Jakarta time
+    const createdAt = moment().tz('Asia/Jakarta').toISOString();
+    const mountain_clicks_uuid = uuidv4();
+
+    // Data to store
+    const data = {
+      mountain_clicks_uuid,
+      id,
+      user_uid,
+      createdAt,
+    };
+
+    // Reference to the user's document
+    const userDocRef = firestore.collection('users_log').doc(user_uid);
+
+    // Reference to the subcollection 'mountain_clicks' within the user's document
+    const clicksCollectionRef = userDocRef.collection('mountain_clicks');
+
+    // Add data to the subcollection
+    await clicksCollectionRef.add(data);
+
+    return res.status(200).json(combinedData);
+
   } catch (err) {
     console.error('Error fetching mountain or weather data:', err);
-    res.status(500).send({ message: 'Internal server error' });
+    return res.status(500).send({ message: 'Internal server error' });
   }
 };
 

@@ -1,6 +1,10 @@
 const { v4: uuidv4 } = require('uuid');
 const moment = require('moment-timezone');
 const { Storage } = require('@google-cloud/storage');
+const firestore = require('../config/firestore');
+const jwt = require('jsonwebtoken');
+const UsersModel = require ('../models/UsersModel')
+
 
 const OpenTripsModel = require ('../models/OpenTripsModel');
 
@@ -30,6 +34,50 @@ const getAllOpenTripsById = async (req, res) => {
     try {
         const { open_trip_uuid } = req.params;
         const [ data ] = await OpenTripsModel.getAllOpenTripsById(open_trip_uuid);
+
+        // Check Token
+        const authHeader = req.headers.authorization;
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+        const user_uid = decoded.uid;
+
+        const [ isUser ] = await UsersModel.getCurrentUser(decoded.uid);
+
+        if (isUser.length === 0 ) {
+            return res.status(401).json({
+                status: 401,
+                message: 'Invalid token'
+            });
+        }
+  
+        if (!open_trip_uuid || !user_uid) {
+            return res.status(400).json({
+            status: 400,
+            message: 'Missing required fields',
+            open  
+            });
+        }
+    
+        // Create a timestamp in Jakarta time
+        const createdAt = moment().tz('Asia/Jakarta').toISOString();
+        const opentrip_clicks_uuid = uuidv4();
+    
+        // Data to store
+        const userClickedDetailOpenTrip = {
+            opentrip_clicks_uuid,
+            open_trip_uuid,
+            user_uid,
+            createdAt,
+        };
+    
+        // Reference to the user's document
+        const userDocRef = firestore.collection('users_log').doc(user_uid);
+
+        // Reference to the subcollection 'mountain_clicks' within the user's document
+        const clicksCollectionRef = userDocRef.collection('opentrip_clicks');
+
+        // Add userClickedDetailOpenTrip to the subcollection
+        await clicksCollectionRef.add(userClickedDetailOpenTrip);
         
         // Fetch mountain data for each open trip
         const dataWithRelationship = await Promise.all(data.map(async (trip) => {
@@ -58,7 +106,9 @@ const getAllOpenTripsById = async (req, res) => {
             };
         }));
 
-        res.status(200).json({
+        
+
+        return res.status(200).json({
             status: 200,
             message: "Open Trips successfully fetched",
             data: dataWithRelationship
