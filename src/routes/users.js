@@ -26,10 +26,10 @@ router.get('/get-current-user', verifyToken, UserController.currentUsers);
 router.post('/forgot-password', UserController.forgotPasswordUsers);
 
 // Update Photo Profile - POST
-router.put('/update/photo/:user_uid', upload.single('image'), UserController.updatePhotoProfileUser);
+router.put('/update/photo', verifyToken, upload.single('image'), UserController.updatePhotoProfileUser);
 
 // Update Profile - PUT
-router.put('/update/:user_uid', UserController.updateProfileUser);
+router.put('/update', verifyToken, UserController.updateProfileUser);
 
 
 module.exports = router;

@@ -321,8 +321,29 @@ const forgotPasswordUsers = async (req, res) => {
 
 const updateProfileUser = async (req, res) => {
     try {
-        const { user_uid } = req.params; 
         const { body } = req
+
+        // Check Token
+        const authHeader = req.headers.authorization;
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+        const user_uid = decoded.uid;
+
+        if (blacklist.has(token)) {
+            return res.status(401).json({
+                status: 401,
+                message: 'Token revoked'
+            });
+        }
+
+        const [ data ] = await UsersModel.getUserById(user_uid);
+
+        if (data.length === 0 ) {
+            return res.status(401).json({
+                status: 401,
+                message: 'Invalid token'
+            });
+        }
         
         // Check if the body contains only the required fields
         const allowedFields = ['username', 'phone_number'];
@@ -336,8 +357,6 @@ const updateProfileUser = async (req, res) => {
                 invalidFields: invalidFields
             });
         }
-        
-        const [ data ] = await UsersModel.getUserById(user_uid);
         
         if (data.length === 1)
         {
@@ -364,8 +383,30 @@ const updateProfileUser = async (req, res) => {
 
 const updatePhotoProfileUser = async (req, res) => {
     try {
-        const { user_uid } = req.params;
         const { file } = req;
+
+        // Check Token
+        const authHeader = req.headers.authorization;
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+        const user_uid = decoded.uid;
+
+        if (blacklist.has(token)) {
+            return res.status(401).json({
+                status: 401,
+                message: 'Token revoked'
+            });
+        }
+
+        const [ data ] = await UsersModel.getUserById(user_uid);
+
+        if (data.length === 0 ) {
+            return res.status(401).json({
+                status: 401,
+                message: 'Invalid token'
+            });
+        }
+        
 
         if (!file) {
             return res.status(400).json({ message: 'No file uploaded.' });

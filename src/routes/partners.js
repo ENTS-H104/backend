@@ -25,10 +25,10 @@ router.get('/get-current-user', verifyToken, PartnerController.currentPartners);
 router.post('/forgot-password', PartnerController.forgotPasswordPartners);
 
 // Update Photo Profile - POST
-router.put('/update/photo/:partner_uid', upload.single('image'), PartnerController.updatePhotoProfilePartner);
+router.put('/update/photo', verifyToken, upload.single('image'), PartnerController.updatePhotoProfilePartner);
 
 // Update Profile - PUT
-router.put('/update/:partner_uid', PartnerController.updateProfilePartner);
+router.put('/update', verifyToken, PartnerController.updateProfilePartner);
 
 
 module.exports = router;
