@@ -15,6 +15,28 @@ const getAllMountains = (limit, offset) => {
     return dbPool.execute(SQLQuery);
 }
 
+const getAllMountainsML = (date) => {
+    const SQLQuery = `SELECT mountain.mountain_uuid,
+                        mountain.mountain_uuid,
+                        mountain.name,
+                        mountain.image_url,
+                        mountain.description,
+                        mountain.height,
+                        mountain.status,
+                        mountain.lat,
+                        mountain.lon,
+                        mountain.magmaCategory,
+                        mountain.province,
+                        mountain.harga,
+                        mountain.gmaps,
+                    COUNT(ot.open_trip_uuid) total_trip_open
+                    FROM mountains mountain
+                    LEFT JOIN open_trips ot ON mountain.mountain_uuid = ot.mountain_uuid
+                    LEFT JOIN open_trip_schedules ots ON ots.open_trip_schedule_uuid=ot.open_trip_schedule_uuid AND ots.start_date >= ?
+                    group by mountain.mountain_uuid`;
+    return dbPool.execute(SQLQuery, [date]);
+}
+
 const getMountainById = (id) => {
     const SQLQuery = `SELECT mountain.mountain_uuid,
                         mountain.mountain_uuid,
@@ -47,5 +69,6 @@ const createMountain = (uuid, name, imageUrl, description, height, status, lat, 
 module.exports = {
     getAllMountains,
     createMountain,
-    getMountainById
+    getMountainById,
+    getAllMountainsML
 }

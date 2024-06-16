@@ -6,6 +6,7 @@ const router = express.Router();
 
 // Read - Get
 router.get('/', MountainsController.getAllMountains);
+router.get('/get-mountains/ml', MountainsController.getAllMountainsML);
 router.get('/:id', verifyToken, MountainsController.getMountainWeatherById);
 const upload = multer({ storage: multer.memoryStorage() });
 router.post('/', upload.single('image'), MountainsController.uploadMountain);
