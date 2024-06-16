@@ -6,8 +6,13 @@ const router = express.Router();
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+
 // Read - GET
 router.get('/', PartnerController.getAllPartners);
+
+// Admin
+router.get('/admin', PartnerController.getAllMitraNeedVerification);
+router.put('/admin', PartnerController.changeMitraStatus);
 
 // Register - POST
 router.post('/register', PartnerController.registerPartners);
@@ -33,5 +38,11 @@ router.put('/update/photo', verifyToken, upload.single('image'), PartnerControll
 // Update Profile - PUT
 router.put('/update', verifyToken, PartnerController.updateProfilePartner);
 
+const uploadFields = [
+    { name: 'image_ktp', maxCount: 1 },
+    { name: 'image_selfie_and_ktp', maxCount: 1 }
+  ];
+
+router.put('/verification', upload.fields(uploadFields), PartnerController.MitraVerification);
 
 module.exports = router;

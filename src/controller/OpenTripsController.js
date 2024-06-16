@@ -3,6 +3,7 @@ const moment = require('moment-timezone');
 const { Storage } = require('@google-cloud/storage');
 const firestore = require('../config/firestore');
 const jwt = require('jsonwebtoken');
+const PartnersModel = require ('../models/PartnersModel')
 // const UsersModel = require ('../models/UsersModel')
 
 
@@ -174,70 +175,83 @@ const createNewOpenTrips = async (req, res) => {
     try {
         const { body, file } = req;
 
-        const startDateObj = new Date(body.start_date);
-        const endDateObj = new Date(body.end_date);
+        const [ partnerDetail ] = await PartnersModel.getCurrentPartners(body.partner_uid)
+        const [ verified_status ] = await PartnersModel.getVerificationData(partnerDetail[0].verified_status_uuid)
+        const isAccepted = verified_status[0].verified_status
+           
+        if ( isAccepted.toLowerCase() === "accepted" ) {
+            const startDateObj = new Date(body.start_date);
+            const endDateObj = new Date(body.end_date);
+        
+            // Calculate the difference in milliseconds
+            const differenceInMilliseconds = endDateObj - startDateObj;
+        
+            // Convert milliseconds to days
+            const millisecondsPerDay = 1000 * 60 * 60 * 24;
+            const totalDays = differenceInMilliseconds / millisecondsPerDay;
     
-        // Calculate the difference in milliseconds
-        const differenceInMilliseconds = endDateObj - startDateObj;
+            if (!file) {
+                return res.status(400).json({ message: 'No file uploaded.' });
+            }
     
-        // Convert milliseconds to days
-        const millisecondsPerDay = 1000 * 60 * 60 * 24;
-        const totalDays = differenceInMilliseconds / millisecondsPerDay;
-
-        if (!file) {
-            return res.status(400).json({ message: 'No file uploaded.' });
-        }
-
-        // Create a new blob in the bucket and upload the file data
-        const jakartaTime = moment().tz('Asia/Jakarta').format('YYYYMMDD_HHmmss');
-        const blobName = `open-trips/${Date.now()}_${jakartaTime}_${req.file.originalname}`;
-        const blob = bucket.file(blobName);
-        const blobStream = blob.createWriteStream({
-            resumable: false,
-        });
-
-        blobStream.on('finish', async () => {
-            // The public URL can be used to access the file via HTTP
-            const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
-
-            // You can now use the public URL and body data to create a new OpenTrips 
-
-            const uuid = uuidv4();
-            try {
-                await OpenTripsModel.createNewOpenTrips(body, uuid, publicUrl, totalDays);
-            } catch (error) {
+            // Create a new blob in the bucket and upload the file data
+            const jakartaTime = moment().tz('Asia/Jakarta').format('YYYYMMDD_HHmmss');
+            const blobName = `open-trips/${Date.now()}_${jakartaTime}_${req.file.originalname}`;
+            const blob = bucket.file(blobName);
+            const blobStream = blob.createWriteStream({
+                resumable: false,
+            });
+    
+            blobStream.on('finish', async () => {
+                // The public URL can be used to access the file via HTTP
+                const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+    
+                // You can now use the public URL and body data to create a new OpenTrips 
+    
+                const uuid = uuidv4();
+                try {
+                    await OpenTripsModel.createNewOpenTrips(body, uuid, publicUrl, totalDays);
+                } catch (error) {
+                    res.status(500).json({
+                        status: 500,
+                        message: 'Server Error',
+                        serverMessage: error.message,
+                    });
+                    return 0
+                }
+    
+    
+                res.status(201).json({
+                    status: 201,
+                    message: 'Open trip created successfully.',
+                    data: {
+                        open_trip_uuid: uuid,
+                        open_trip_schedule_uuid: `schedule-${uuid}`,
+                        ...body,
+                        image_url: publicUrl,
+                        total_day: totalDays
+                    }
+                });
+            });
+    
+            blobStream.on('error', (err) => {
                 res.status(500).json({
                     status: 500,
-                    message: 'Server Error',
-                    serverMessage: error.message,
+                    message: 'Unable to upload file.',
+                    serverMessage: err.message,
                 });
                 return 0
-            }
-
-
-            res.status(201).json({
-                status: 201,
-                message: 'Open trip created successfully.',
-                data: {
-                    open_trip_uuid: uuid,
-                    open_trip_schedule_uuid: `schedule-${uuid}`,
-                    ...body,
-                    image_url: publicUrl,
-                    total_day: totalDays
-                }
             });
-        });
-
-        blobStream.on('error', (err) => {
-            res.status(500).json({
-                status: 500,
-                message: 'Unable to upload file.',
-                serverMessage: err.message,
+    
+            blobStream.end(file.buffer);
+        } else {
+            return res.status(403).json({
+                status: 403,
+                message: 'Forbidden, account not verified by admin',
             });
-            return 0
-        });
+        }
 
-        blobStream.end(file.buffer);
+        
     } catch (error) {
         res.status(500).json({
             status: 500,
