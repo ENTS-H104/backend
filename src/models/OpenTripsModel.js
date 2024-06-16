@@ -133,7 +133,7 @@ const getPartnerOpenTrip2 = (partner_uid) => {
                         JOIN 
                             mountains mountain ON ot.mountain_uuid = mountain.mountain_uuid
                         LEFT JOIN 
-                            transaction_logs tl ON ot.open_trip_uuid = tl.open_trip_uuid OR tl.status_accepted = "ACCEPTED" OR tl.status_payment="PENDING"
+                            transaction_logs tl ON ot.open_trip_uuid = tl.open_trip_uuid AND tl.status_accepted = "ACCEPTED" OR tl.status_payment="PENDING"
                         WHERE ot.partner_uid LIKE '%${partner_uid}%'
                         GROUP BY 
                             ot.open_trip_uuid`;
@@ -184,14 +184,19 @@ const getOpenTripsforRec = (date) => {
                         ot.open_trip_uuid, 
                         ot.name, 
                         ot.image_url, 
-                        ot.price, 
+                        ot.price,
+                        ot.min_people,
+                        ot.max_people,
+                        ot.include,
+                        DATE_FORMAT(ots.start_date, '%Y-%m-%d') AS start_date,
+                        DATE_FORMAT(ots.end_date, '%Y-%m-%d') AS end_date,
                         mountain.name AS mountain_name, 
-                        mountain.mountain_uuid, 
+                        mountain.mountain_uuid,
                         COALESCE(SUM(tl.total_participant), 0) AS total_participants 
                     FROM open_trips ot 
                     JOIN open_trip_schedules ots ON ot.open_trip_schedule_uuid = ots.open_trip_schedule_uuid 
                     JOIN mountains mountain ON ot.mountain_uuid = mountain.mountain_uuid 
-                    LEFT JOIN transaction_logs tl ON ot.open_trip_uuid = tl.open_trip_uuid OR tl.status_accepted = "ACCEPTED" OR tl.status_payment="PENDING"
+                    LEFT JOIN transaction_logs tl ON ot.open_trip_uuid = tl.open_trip_uuid AND tl.status_accepted = "ACCEPTED" OR tl.status_payment="PENDING"
                     WHERE ots.start_date >= ?
                     GROUP BY ot.open_trip_uuid`;
     return dbPool.execute(SQLQuery, [date]);
