@@ -12,6 +12,9 @@ router.get('/', PartnerController.getAllPartners);
 // Register - POST
 router.post('/register', PartnerController.registerPartners);
 
+// Register Admin - POST
+router.post('/register/admin', PartnerController.registerPartnersAdmin);
+
 // Login - POST 
 router.post('/login', PartnerController.loginPartners);
 

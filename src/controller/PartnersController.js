@@ -124,6 +124,80 @@ const registerPartners = async (req, res) => {
     }
 }
 
+const registerPartnersAdmin = async (req, res) => {
+    try {
+
+        const { api_key } = req.query
+
+        if (api_key === process.env.API_KEY) {
+            const { body } = req;
+
+            const email = body.email;
+            const username = body.username;
+            const phone_number = body.phone_number;
+            const password = body.password;
+            const domicile_address = body.domicile_address;
+    
+            if (!email || !username || !phone_number || !password) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Bad Request. `email, username, phone_number, password, domicile_address` is required",
+                })
+            }
+    
+            // Check if the body contains only the required fields
+            const allowedFields = ['email', 'password', 'username', 'phone_number', 'domicile_address'];
+            const receivedFields = Object.keys(body);
+            const invalidFields = receivedFields.filter(field => !allowedFields.includes(field));
+    
+            if (invalidFields.length > 0) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Bad Request. Invalid fields found, please input `email, username, phone_number, password, domicile_address` only!",
+                    invalidFields: invalidFields
+                });
+            }
+            
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            
+            const user = userCredential.user;
+            
+            await updateProfile(user, {
+                displayName: username,
+            });
+    
+            await sendEmailVerification(auth.currentUser);
+            
+            const uid = userCredential.user.uid;
+            const uuid = uuidv4();
+    
+            const [ defaultRole ] = await PartnersModel.getDefaultPartnerRoleAdmin();
+            const defaultRoleToString = JSON.stringify(defaultRole[0].partner_role_uuid)
+
+            await PartnersModel.registerPartnersAdmin(uid, email, phone_number, username, uuid, defaultRoleToString, domicile_address);
+            res.status(201).json({
+                status: 201,
+                message: `Successfully created an account, Verification email sent. Please check your email`,
+                data: {
+                    partner_uid: userCredential.user.uid,
+                    verified_status_uuid: uuid,
+                    username: username,
+                    email: userCredential.user.email,
+                    phone_number: phone_number,
+                    domicile_address: domicile_address,
+                    role: "admin"
+                }
+            })
+        }
+       
+    } catch (error) {
+        res.status(401).json({
+            status: 401,
+            message: "Unauthorized",
+        })
+    }
+}
+
 const loginPartners = async (req, res) => {
     try {
         const { body } = req;
@@ -245,6 +319,9 @@ const currentPartners = async (req, res) => {
 
         
         const [ data ] = await PartnersModel.getCurrentPartners(decoded.uid);
+        const verifiedUuid = data[0].verified_status_uuid;
+        
+        const [ verified_data ] = await PartnersModel.getVerificationData(verifiedUuid);
 
         if (data.length === 0 ) {
             return res.status(401).json({
@@ -255,6 +332,7 @@ const currentPartners = async (req, res) => {
 
         const dataWithLocalTime = data.map(data => ({
             ...data,
+            verification_data: verified_data,
             created_at: moment.utc(data.created_at).tz('Asia/Bangkok').format(),
             updated_at: moment.utc(data.updated_at).tz('Asia/Bangkok').format()
         }));
@@ -475,5 +553,6 @@ module.exports = {
     forgotPasswordPartners,
     currentPartners,
     updateProfilePartner,
-    updatePhotoProfilePartner
+    updatePhotoProfilePartner,
+    registerPartnersAdmin
 }

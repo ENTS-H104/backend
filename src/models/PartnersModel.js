@@ -18,10 +18,32 @@ const getAllPartners = () => {
 }
 
 const registerPartners = async (uid, email, phone_number, username, uuid, defaultRole, domicile_address) => {    
-    const SQLQuery1 = `INSERT INTO verified_status (verified_status_uuid) VALUES (?)`
+    const SQLQuery1 = `INSERT INTO verified_status (verified_status_uuid, verified_status) VALUES (?, ?)`
     const SQLQuery2 = `INSERT INTO partners (partner_uid, partner_role_uuid, verified_status_uuid, email, username, image_url, phone_number, domicile_address) VALUES (?, ${defaultRole}, ?, ?, ?, ?, ?, ?)`
     
-    const values1 = [uuid]
+    const values1 = [uuid, "disabled"]
+    const values2 = [
+        uid,
+        uuid,
+        email,
+        username,
+        "https://firebasestorage.googleapis.com/v0/b/ents-h104-auth.appspot.com/o/users%2Fno-profile%2Fdefault-profile-icon-h104.jpeg?alt=media&token=9f7c25af-e039-46bd-9061-70c26f925cf2",
+        phone_number,
+        domicile_address
+    ]
+
+    await dbPool.execute(SQLQuery1, values1);
+    await dbPool.execute(SQLQuery2, values2);
+
+    return console.log("Mitra created")
+    
+}
+
+const registerPartnersAdmin = async (uid, email, phone_number, username, uuid, defaultRole, domicile_address) => {    
+    const SQLQuery1 = `INSERT INTO verified_status (verified_status_uuid, verified_status) VALUES (?, ?)`
+    const SQLQuery2 = `INSERT INTO partners (partner_uid, partner_role_uuid, verified_status_uuid, email, username, image_url, phone_number, domicile_address) VALUES (?, ${defaultRole}, ?, ?, ?, ?, ?, ?)`
+    
+    const values1 = [uuid, "disabled"]
     const values2 = [
         uid,
         uuid,
@@ -56,8 +78,21 @@ const getCurrentPartners = (uid) => {
     return dbPool.execute(SQLQuery);
 }
 
+const getVerificationData = (uid) => {
+    const SQLQuery = `SELECT 
+                        *
+                      FROM verified_status
+                      WHERE verified_status_uuid="${uid}"`;
+    return dbPool.execute(SQLQuery);
+}
+
 const getDefaultPartnerRole = () => {
     const SQLQuery = `SELECT partner_role_uuid FROM partner_roles WHERE partner_role_name LIKE '%mitra%';`
+    return dbPool.execute(SQLQuery);
+}
+
+const getDefaultPartnerRoleAdmin = () => {
+    const SQLQuery = `SELECT partner_role_uuid FROM partner_roles WHERE partner_role_name LIKE '%admin%';`
     return dbPool.execute(SQLQuery);
 }
 
@@ -102,5 +137,8 @@ module.exports = {
     getPartnerById,
     updateProfilePartner,
     updatePhotoProfilePartner,
-    getIfUser
+    getIfUser,
+    getVerificationData,
+    registerPartnersAdmin,
+    getDefaultPartnerRoleAdmin
 }
