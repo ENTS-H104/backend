@@ -90,6 +90,8 @@ const getDetailTransaction = (uuid) => {
                     ots.start_date,
                     ots.start_time,
                     ot.meeting_point,
+                    tl.status_accepted,
+                    tl.status_payment,
                     GROUP_CONCAT(participants.name) AS name_participant
                 FROM transaction_logs tl
                 JOIN open_trips ot ON tl.open_trip_uuid=ot.open_trip_uuid
@@ -103,7 +105,9 @@ const getDetailTransaction = (uuid) => {
                     partners.phone_number,
                     ots.start_date,
                     ots.start_time,
-                    ot.meeting_point;`;
+                    ot.meeting_point,
+                    tl.status_accepted,
+                    tl.status_payment;`;
     return dbPool.execute(sql, [uuid]);
 };
 
