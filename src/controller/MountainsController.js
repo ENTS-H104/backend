@@ -177,8 +177,28 @@ const uploadMountain = async (req, res) => {
     }
   };
 
+  const getAllMountainsML = async (req, res) => {
+    try {
+        const date = moment.tz("Asia/Jakarta").format("YYYY-MM-DD");
+        const [ data ] = await mountainsModel.getAllMountainsML(date);
+        
+        res.status(200).json({
+            status: 200,
+            message: "Data successfully fetched",
+            data: data
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 500,
+            message: "Server Error",
+            serverMessage: error,
+        })
+    }
+}
+
 module.exports = {
     getAllMountains,
     uploadMountain,
-    getMountainWeatherById
+    getMountainWeatherById,
+    getAllMountainsML
 }
