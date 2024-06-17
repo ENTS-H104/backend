@@ -17,6 +17,7 @@ const transactionRoutes = require('./routes/transaction')
 const paymentGatewayRoutes = require('./routes/paymentGateway')
 const MessagesRoutes = require('./routes/MessagesRoutes')
 const LogStore = require('./routes/logsStore')
+const recommenderRoutes = require('./routes/recommendation')
 
 const app = express();
 
@@ -46,6 +47,8 @@ app.use('/api/payment-gateway', paymentGatewayRoutes)
 app.use('/api/messages', MessagesRoutes)
 
 app.use('/api/logs', LogStore)
+
+app.use('/api/recommendation', recommenderRoutes)
 
 // Domain Response
 app.get('/', (req, res) => {
