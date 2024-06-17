@@ -63,7 +63,7 @@ const getAllMitraNeedVerification = async (req, res) => {
         const [allPartnersData] = await PartnersModel.getAllMitraNeedVerification(status);
 
         const dataWithRelationship = await Promise.all(allPartnersData.map(async (partner) => {
-            const [ verificationData ] = await PartnersModel.getVerificationData(partner.verified_status_uuid);
+            const [ verification_data ] = await PartnersModel.getVerificationData(partner.verified_status_uuid);
             
             return {
                 partner_uid: partner.partner_uid,
@@ -76,7 +76,7 @@ const getAllMitraNeedVerification = async (req, res) => {
                 domicile_address: partner.domicile_address,
                 created_at: moment.utc(partner.created_at).tz('Asia/Bangkok').format(),
                 updated_at: moment.utc(partner.updated_at).tz('Asia/Bangkok').format(),
-                verificationData
+                verification_data
             };
         }));
 

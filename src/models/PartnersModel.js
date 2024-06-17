@@ -155,7 +155,7 @@ const updatePhotoProfilePartner = (publicUrl, updated_at, partner_uid) => {
 
 const MitraVerification = (body, publicUrl1, publicUrl2, verified_status_uuid) => {
     const SQLQuery = `UPDATE verified_status
-                      SET image_ktp="${publicUrl1}", image_selfie_and_ktp="${publicUrl2}", nik="${body.nik}", name="${body.name}", message="Verifikasi dalam tahap pemeriksaan admin, silahkan tunggu hasil", verified_status="disabled"
+                      SET image_ktp="${publicUrl1}", image_selfie_and_ktp="${publicUrl2}", nik="${body.nik}", name="${body.name}", message="Verifikasi dalam tahap pemeriksaan admin, silahkan tunggu hasil", verified_status="onprocess"
                       WHERE verified_status_uuid="${verified_status_uuid}"`;
     return dbPool.execute(SQLQuery);
 }
