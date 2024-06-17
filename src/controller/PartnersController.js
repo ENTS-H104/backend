@@ -55,6 +55,89 @@ const getAllPartners = async (req, res) => {
     }
 }
 
+const getAllMitraNeedVerification = async (req, res) => {
+    try {
+
+        const { status } = req.query;
+
+        const [allPartnersData] = await PartnersModel.getAllMitraNeedVerification(status);
+
+        const dataWithRelationship = await Promise.all(allPartnersData.map(async (partner) => {
+            const [ verificationData ] = await PartnersModel.getVerificationData(partner.verified_status_uuid);
+            
+            return {
+                partner_uid: partner.partner_uid,
+                verified_status_uuid: partner.verified_status_uuid,
+                role: partner.role,
+                email: partner.email,
+                username: partner.username,
+                image_url: partner.image_url,
+                phone_number: partner.phone_number,
+                domicile_address: partner.domicile_address,
+                created_at: moment.utc(partner.created_at).tz('Asia/Bangkok').format(),
+                updated_at: moment.utc(partner.updated_at).tz('Asia/Bangkok').format(),
+                verificationData
+            };
+        }));
+
+        
+        res.status(200).json({
+            status: 200,
+            message: "Data successfully fetched",
+            data: dataWithRelationship
+        });
+    
+    } catch (error) {
+        res.status(500).json({
+            status: 500,
+            message: "Server Error",
+            serverMessage: error,
+        })
+    }
+}
+
+const changeMitraStatus = async (req, res) => {
+    try {
+        const { body } = req
+        
+        // Check if the body contains only the required fields
+        const allowedFields = ['verified_status_uuid', 'verified_status', 'message'];
+        const receivedFields = Object.keys(body);
+        const invalidFields = receivedFields.filter(field => !allowedFields.includes(field));
+
+        if (invalidFields.length > 0) {
+            return res.status(400).json({
+                status: 400,
+                message: "Bad Request. Invalid fields found, please input 'verified_status', 'message' only!",
+                invalidFields: invalidFields
+            });
+        }
+
+        const [ data ] = await PartnersModel.getVerificationData(body.verified_status_uuid);
+        
+        if (data.length === 1)
+        {
+            const updated_at = moment().tz('Asia/Bangkok').format('YYYY-MM-DD HH:mm:ss');
+            await PartnersModel.updateStatusMitra(body, updated_at, body.verified_status_uuid);
+            res.status(200).json({
+                status: 200,
+                message: `Successfully update mitra with uid: ${body.verified_status_uuid}`,
+                data: body
+            })
+        } else {
+            res.status(404).json({
+                status: 404,
+                message: `Role with uuid: ${partner_uid} not found`,
+            })
+        }
+    } catch (error) {
+        res.status(500).json({
+            message: "Server Error",
+            serverMessage: error,
+        })
+    }
+}
+
 const registerPartners = async (req, res) => {
     try {
         const { body } = req;
@@ -120,6 +203,80 @@ const registerPartners = async (req, res) => {
             status: 500,
             message: "Server Error",
             serverMessage: error,
+        })
+    }
+}
+
+const registerPartnersAdmin = async (req, res) => {
+    try {
+
+        const { api_key } = req.query
+
+        if (api_key === process.env.API_KEY) {
+            const { body } = req;
+
+            const email = body.email;
+            const username = body.username;
+            const phone_number = body.phone_number;
+            const password = body.password;
+            const domicile_address = body.domicile_address;
+    
+            if (!email || !username || !phone_number || !password) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Bad Request. `email, username, phone_number, password, domicile_address` is required",
+                })
+            }
+    
+            // Check if the body contains only the required fields
+            const allowedFields = ['email', 'password', 'username', 'phone_number', 'domicile_address'];
+            const receivedFields = Object.keys(body);
+            const invalidFields = receivedFields.filter(field => !allowedFields.includes(field));
+    
+            if (invalidFields.length > 0) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Bad Request. Invalid fields found, please input `email, username, phone_number, password, domicile_address` only!",
+                    invalidFields: invalidFields
+                });
+            }
+            
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            
+            const user = userCredential.user;
+            
+            await updateProfile(user, {
+                displayName: username,
+            });
+    
+            await sendEmailVerification(auth.currentUser);
+            
+            const uid = userCredential.user.uid;
+            const uuid = uuidv4();
+    
+            const [ defaultRole ] = await PartnersModel.getDefaultPartnerRoleAdmin();
+            const defaultRoleToString = JSON.stringify(defaultRole[0].partner_role_uuid)
+
+            await PartnersModel.registerPartnersAdmin(uid, email, phone_number, username, uuid, defaultRoleToString, domicile_address);
+            res.status(201).json({
+                status: 201,
+                message: `Successfully created an account, Verification email sent. Please check your email`,
+                data: {
+                    partner_uid: userCredential.user.uid,
+                    verified_status_uuid: uuid,
+                    username: username,
+                    email: userCredential.user.email,
+                    phone_number: phone_number,
+                    domicile_address: domicile_address,
+                    role: "admin"
+                }
+            })
+        }
+       
+    } catch (error) {
+        res.status(401).json({
+            status: 401,
+            message: "Unauthorized",
         })
     }
 }
@@ -245,6 +402,9 @@ const currentPartners = async (req, res) => {
 
         
         const [ data ] = await PartnersModel.getCurrentPartners(decoded.uid);
+        const verifiedUuid = data[0].verified_status_uuid;
+        
+        const [ verified_data ] = await PartnersModel.getVerificationData(verifiedUuid);
 
         if (data.length === 0 ) {
             return res.status(401).json({
@@ -255,6 +415,7 @@ const currentPartners = async (req, res) => {
 
         const dataWithLocalTime = data.map(data => ({
             ...data,
+            verification_data: verified_data,
             created_at: moment.utc(data.created_at).tz('Asia/Bangkok').format(),
             updated_at: moment.utc(data.updated_at).tz('Asia/Bangkok').format()
         }));
@@ -467,6 +628,100 @@ const updatePhotoProfilePartner = async (req, res) => {
     }
 }
 
+const MitraVerification = async (req, res) => {
+    try {
+        const { body, files } = req;
+
+         // Check Token
+         const authHeader = req.headers.authorization;
+         const token = authHeader.split(' ')[1];
+         const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+         const partner_uid = decoded.uid;
+ 
+         if (blacklist.has(token)) {
+             return res.status(401).json({
+                 status: 401,
+                 message: 'Token revoked'
+             });
+         }
+ 
+         const [ data ] = await PartnersModel.getPartnerById(partner_uid);
+
+        const verifiedUuid = data[0].verified_status_uuid;
+
+ 
+         if (data.length === 0 ) {
+             return res.status(401).json({
+                 status: 401,
+                 message: 'Invalid token'
+             });
+         }
+        
+        if (!files || !files.image_ktp || !files.image_selfie_and_ktp) {
+            return res.status(400).json({ message: 'Both image_ktp and image_selfie_and_ktp files must be uploaded.' });
+        }
+
+        const imageKtpFile = files.image_ktp[0];
+        const imageSelfieAndKtpFile = files.image_selfie_and_ktp[0];
+
+        const jakartaTime = moment().tz('Asia/Jakarta').format('YYYYMMDD_HHmmss');
+
+        const blobName1 = `partners/verification/${Date.now()}_${jakartaTime}_${imageKtpFile.originalname}`;
+        const blob1 = bucket.file(blobName1);
+        const blobStream1 = blob1.createWriteStream({ resumable: false });
+
+        const blobName2 = `partners/verification/${Date.now()}_${jakartaTime}_${imageSelfieAndKtpFile.originalname}`;
+        const blob2 = bucket.file(blobName2);
+        const blobStream2 = blob2.createWriteStream({ resumable: false });
+
+        // Helper function to handle blob stream events
+        const uploadFile = (blobStream, file, res, fileName) => new Promise((resolve, reject) => {
+            blobStream.on('finish', () => {
+                const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+                resolve(publicUrl);
+            });
+
+            blobStream.on('error', (err) => {
+                reject(err);
+            });
+
+            blobStream.end(file.buffer);
+        });
+
+        try {
+            const [publicUrl1, publicUrl2] = await Promise.all([
+                uploadFile(blobStream1, imageKtpFile, res, blobName1),
+                uploadFile(blobStream2, imageSelfieAndKtpFile, res, blobName2)
+            ]);
+
+            await PartnersModel.MitraVerification(body, publicUrl1, publicUrl2, verifiedUuid);
+
+            res.status(200).json({
+                status: 200,
+                message: 'Verification successful',
+                data: {
+                    image_ktp: publicUrl1,
+                    image_selfie_and_ktp: publicUrl2,
+                    nik: body.nik,
+                    name: body.name,
+                    message: "Verifikasi dalam tahap pemeriksaan admin, silahkan tunggu hasil"
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                status: 500,
+                message: 'Server Error',
+                serverMessage: error.message,
+            });
+        }
+    } catch (error) {
+        res.status(500).json({
+            message: "Server Error",
+            serverMessage: error.message,
+        });
+    }
+};
+
 module.exports = {
     getAllPartners,
     registerPartners,
@@ -475,5 +730,9 @@ module.exports = {
     forgotPasswordPartners,
     currentPartners,
     updateProfilePartner,
-    updatePhotoProfilePartner
+    updatePhotoProfilePartner,
+    registerPartnersAdmin,
+    MitraVerification,
+    getAllMitraNeedVerification,
+    changeMitraStatus
 }

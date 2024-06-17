@@ -102,7 +102,7 @@ const getMountainWeatherById = async (req, res) => {
     // Data to store
     const data = {
       mountain_clicks_uuid,
-      id,
+      mountain_uuid: id,
       user_uid,
       createdAt,
     };
