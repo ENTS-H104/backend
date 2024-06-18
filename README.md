@@ -75,19 +75,19 @@ Before you begin, ensure you have the following:
     CMD ["npm", "run", "start"]
     ```
 
-3. **Build the Docker image:**
+3. **Build artifact:**
     ```bash
-    docker build -t gcr.io/[YOUR_PROJECT_ID]/my-express-app .
+    gcloud artifacts repositories create backend --repository-format=docker --location=asia-southeast2 --async
     ```
 
-4. **Push the Docker image to Container Registry:**
+4. **Build and push the Docker image to Artifact Registry:**
     ```bash
-    docker push gcr.io/[YOUR_PROJECT_ID]/my-express-app
+    gcloud builds submit --tag asia-southeast2-docker.pkg.dev/[YOUR_PROJECT_ID]/backend/api-highking:your-tags
     ```
 
 5. **Deploy to Cloud Run:**
     ```bash
-    gcloud run deploy --image gcr.io/[YOUR_PROJECT_ID]/my-express-app --platform managed
+    gcloud run deploy --image asia-southeast2-docker.pkg.dev/[YOUR_PROJECT_ID]/backend/api-highking:your-tags
     ```
 
     - Follow the prompts to select your region and allow unauthenticated invocations if desired.
@@ -101,12 +101,19 @@ You can follow this doccumentation to fill your .env https://docs.google.com/doc
 1. **Set up ACLs for your GCP resources:**
     - Navigate to the IAM & Admin section in the GCP Console.
     - Select "IAM" and click on the "Add" button to add new members.
-    - Assign roles and set permissions for users or service accounts as needed.
+    - Assign roles and set permissions for users or service accounts if needed.
 
 2. **Control access to Cloud Run services:**
     - In the Cloud Run section, select your service.
     - Go to the "Permissions" tab and click "Add member".
     - Add the members and assign roles such as Cloud Run Invoker to control access.
+Configure From CMD
+```bash
+    gcloud init
+    ```
+```bash
+    gcloud auth application-default login
+    ```
 
 ## Using Cloud SQL
 
@@ -116,54 +123,8 @@ You can follow this doccumentation to fill your .env https://docs.google.com/doc
 
 2. **Set up a database and user:**
     - Create a new database and user for your application.
-
-3. **Connect to Cloud SQL from your app:**
-    - Install the necessary package:
-    ```bash
-    npm install mysql
-    ```
-    - Add the connection code in your app:
-    ```javascript
-    const mysql = require('mysql');
-    const connection = mysql.createConnection({
-        host: 'YOUR_CLOUD_SQL_HOST',
-        user: 'YOUR_DB_USER',
-        password: 'YOUR_DB_PASSWORD',
-        database: 'YOUR_DB_NAME'
-    });
-
-    connection.connect((err) => {
-        if (err) {
-            console.error('Error connecting to the database:', err);
-            return;
-        }
-        console.log('Connected to the Cloud SQL database.');
-    });
-    ```
-
-## Using Firestore
-
-1. **Set up Firestore:**
-    - Go to the Firestore section in the GCP Console.
-    - Click "Create Database" and select the appropriate mode (production or test).
-
-2. **Install Firestore package:**
-    ```bash
-    npm install @google-cloud/firestore
-    ```
-
-3. **Add Firestore connection code:**
-    ```javascript
-    const { Firestore } = require('@google-cloud/firestore');
-    const firestore = new Firestore();
-
-    async function addDocument(collection, document) {
-        const docRef = firestore.collection(collection).doc();
-        await docRef.set(document);
-        console.log('Document added with ID:', docRef.id);
-    }
-    ```
-
+    - And fill your .env status.
+    - 
 ## Testing the Deployment
 
 1. **Access your deployed service:**
@@ -173,6 +134,7 @@ You can follow this doccumentation to fill your .env https://docs.google.com/doc
 2. **Test API endpoints:**
     - Use a tool like Postman to test your API endpoints.
     - Ensure you include necessary authentication tokens for Firebase Authentication protected routes.
+    - You can follow our API Documentation: https://documenter.getpostman.com/view/10569515/2sA3QqfY3J
 
 ## References
 
