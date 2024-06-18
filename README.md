@@ -59,23 +59,20 @@ Before you begin, ensure you have the following:
 2. **Dockerize the app:**
     - Create a `Dockerfile` in the root of your project:
     ```dockerfile
-    # Use the official Node.js image.
-    FROM node:14
-
-    # Create and change to the app directory.
-    WORKDIR /usr/src/app
-
-    # Copy application dependency manifests to the container image.
-    COPY package*.json ./
-
-    # Install production dependencies.
-    RUN npm install
-
-    # Copy local code to the container image.
+    # Use a specific version of Node.js as the base image
+    FROM node:18.20.0
+    
+    # Set the working directory in the container
+    WORKDIR /backend
+    
+    # Copy the rest of the application code
     COPY . .
-
-    # Run the web service on container startup.
-    CMD [ "npm", "start" ]
+    
+    # Install dependencies
+    RUN npm install
+    
+    # Command to run the application
+    CMD ["npm", "run", "start"]
     ```
 
 3. **Build the Docker image:**
@@ -97,188 +94,7 @@ Before you begin, ensure you have the following:
 
 ## Integrating APIs
 
-### Firebase Authentication
-
-1. **Set up Firebase Authentication:**
-    - Go to the Firebase Console and select your GCP project.
-    - Navigate to the Authentication section and click "Get Started".
-
-2. **Install Firebase Admin SDK:**
-    ```bash
-    npm install firebase-admin
-    ```
-
-3. **Initialize Firebase in your app:**
-    ```javascript
-    const admin = require('firebase-admin');
-    const serviceAccount = require('PATH/TO/YOUR/SERVICE_ACCOUNT_KEY.json');
-
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-    });
-
-    async function verifyIdToken(idToken) {
-        try {
-            const decodedToken = await admin.auth().verifyIdToken(idToken);
-            console.log('User ID:', decodedToken.uid);
-        } catch (error) {
-            console.error('Error verifying ID token:', error);
-        }
-    }
-    ```
-
-4. **Add authentication middleware:**
-    ```javascript
-    function authenticate(req, res, next) {
-        const idToken = req.headers.authorization;
-        if (!idToken) {
-            return res.status(401).send('Unauthorized');
-        }
-
-        verifyIdToken(idToken)
-            .then(() => next())
-            .catch(() => res.status(401).send('Unauthorized'));
-    }
-
-    app.use(authenticate);
-    ```
-
-### OpenWeather API
-
-1. **Sign up and get an API key:**
-    - Sign up on [OpenWeatherMap](https://openweathermap.org/) and obtain your API key.
-
-2. **Install Axios:**
-    - Install Axios to handle HTTP requests.
-    ```bash
-    npm install axios
-    ```
-
-3. **Create a route to call the API:**
-    - Add the following code to your `app.js` or create a new route file (e.g., `routes/weather.js`).
-    ```javascript
-    const express = require('express');
-    const axios = require('axios');
-    const router = express.Router();
-
-    const API_KEY = 'YOUR_OPENWEATHERMAP_API_KEY';
-    const BASE_URL = 'http://api.openweathermap.org/data/2.5/weather';
-
-    router.get('/weather/:city', async (req, res) => {
-        const city = req.params.city;
-        try {
-            const response = await axios.get(`${BASE_URL}?q=${city}&appid=${API_KEY}`);
-            res.json(response.data);
-        } catch (error) {
-            res.status(500).json({ error: 'Error fetching weather data' });
-        }
-    });
-
-    module.exports = router;
-    ```
-
-4. **Use the new route in your app:**
-    - Include the new route in your main `app.js` file.
-    ```javascript
-    const weatherRouter = require('./routes/weather');
-    app.use('/api', weatherRouter);
-    ```
-
-### Midtrans API
-
-1. **Sign up and get an API key:**
-    - Sign up on [Midtrans](https://midtrans.com/) and obtain your API key.
-
-2. **Install Axios:**
-    - Install Axios to handle HTTP requests.
-    ```bash
-    npm install axios
-    ```
-
-3. **Create a route to call the API:**
-    - Add the following code to your `app.js` or create a new route file (e.g., `routes/payment.js`).
-    ```javascript
-    const express = require('express');
-    const axios = require('axios');
-    const router = express.Router();
-
-    const MIDTRANS_SERVER_KEY = 'YOUR_MIDTRANS_SERVER_KEY';
-    const MIDTRANS_API_URL = 'https://api.midtrans.com/v2/charge';
-
-    router.post('/payment', async (req, res) => {
-        const { order_id, gross_amount, payment_type } = req.body;
-
-        const payload = {
-            payment_type: payment_type,
-            transaction_details: {
-                order_id: order_id,
-                gross_amount: gross_amount
-            }
-        };
-
-        try {
-            const response = await axios.post(MIDTRANS_API_URL, payload, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Basic ${Buffer.from(MIDTRANS_SERVER_KEY).toString('base64')}`
-                }
-            });
-            res.json(response.data);
-        } catch (error) {
-            res.status(500).json({ error: 'Error processing payment' });
-        }
-    });
-
-    module.exports = router;
-    ```
-
-4. **Use the new route in your app:**
-    - Include the new route in your main `app.js` file.
-    ```javascript
-    const paymentRouter = require('./routes/payment');
-    app.use('/api', paymentRouter);
-    ```
-
-### API-ML
-
-1. **Sign up and get an API key:**
-    - Sign up on [API-ML](https://api-ml.com/) and obtain your API key.
-
-2. **Install Axios:**
-    - Install Axios to handle HTTP requests.
-    ```bash
-    npm install axios
-    ```
-
-3. **Create a route to call the API:**
-    - Add the following code to your `app.js` or create a new route file (e.g., `routes/ml.js`).
-    ```javascript
-    const express = require('express');
-    const axios = require('axios');
-    const router = express.Router();
-
-    const API_ML_KEY = 'YOUR_API_ML_KEY';
-    const API_ML_URL = 'https://api.api-ml.com/some-endpoint';
-
-    router.post('/ml', async (req, res) => {
-        const { inputData } = req.body;
-
-        try {
-            const response = await axios.post(API_ML_URL, { data: inputData }, {
-                headers: {
-                    'Authorization': `Bearer ${API_ML_KEY}`
-                }
-            });
-            res.json(response.data);
-        } catch (error) {
-            res.status(500).json({ error: 'Error processing machine learning data' });
-        }
-    });
-
-    module.exports = router;
-   ```markdown
-    app.use('/api', mlRouter);
-    ```
+You can follow this doccumentation to fill your .env https://docs.google.com/document/d/1Q70D-KnAJGSdM9TPFKGYCdj54mO05VXS9CVa8LrxTH8/edit?usp=sharing
 
 ## Configuring ACL
 
