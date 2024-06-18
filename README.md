@@ -109,11 +109,11 @@ You can follow this doccumentation to fill your .env https://docs.google.com/doc
     - Add the members and assign roles such as Cloud Run Invoker to control access.
 Configure From CMD
 ```bash
-    gcloud init
-    ```
+gcloud init
+```
 ```bash
-    gcloud auth application-default login
-    ```
+gcloud auth application-default login
+```
 
 ## Using Cloud SQL
 
