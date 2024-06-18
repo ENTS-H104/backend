@@ -20,7 +20,6 @@ Before you begin, ensure you have the following:
 - A Google Cloud Platform (GCP) account
 - Node.js and npm installed
 - Google Cloud SDK installed and configured
-- Basic knowledge of Express.js and GCP
 
 ## Setting Up GCP
 
