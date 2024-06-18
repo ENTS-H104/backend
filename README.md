@@ -1,4 +1,4 @@
-# Express.js App on Google Cloud Platform (GCP) with ACL, Firebase Auth, OpenWeather, Midtrans, and API-ML
+# Express.js App on Google Cloud Platform (GCP) with ACL, Firebase Auth, OpenWeather API, and Midtrans API
 
 This guide will help you replicate an Express.js application on Google Cloud Platform (GCP), configure Access Control Lists (ACL), integrate Firebase Authentication, OpenWeather, Midtrans, and API-ML APIs, use Cloud SQL and Firestore.
 
@@ -8,10 +8,6 @@ This guide will help you replicate an Express.js application on Google Cloud Pla
 - [Setting Up GCP](#setting-up-gcp)
 - [Deploying the Express.js App](#deploying-the-expressjs-app)
 - [Integrating APIs](#integrating-apis)
-  - [Firebase Authentication](#firebase-authentication)
-  - [OpenWeather API](#openweather-api)
-  - [Midtrans API](#midtrans-api)
-  - [API-ML](#api-ml)
 - [Configuring ACL](#configuring-acl)
 - [Using Cloud SQL](#using-cloud-sql)
 - [Using Firestore](#using-firestore)
@@ -123,8 +119,7 @@ gcloud auth application-default login
 
 2. **Set up a database and user:**
     - Create a new database and user for your application.
-    - And fill your .env status.
-    - 
+    - And fill your .env PORT, DB_USERNAME, DB_PASSWORD, DB_NAME.
 ## Testing the Deployment
 
 1. **Access your deployed service:**
