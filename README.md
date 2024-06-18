@@ -127,7 +127,6 @@ gcloud auth application-default login
 
 2. **Test API endpoints:**
     - Use a tool like Postman to test your API endpoints.
-    - Ensure you include necessary authentication tokens for Firebase Authentication protected routes.
     - You can follow our API Documentation: https://documenter.getpostman.com/view/10569515/2sA3QqfY3J
 
 ## References
