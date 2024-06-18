@@ -67,10 +67,11 @@ const getAllOpenTrips2 = (limit, offset) => {
             mountain.name AS mountain_name,
             mountain.mountain_uuid,
             COALESCE(SUM(CASE 
-                WHEN tl.status_accepted = 'ACCEPTED' OR tl.status_payment = 'PENDING' 
-                THEN tl.total_participant 
-                ELSE 0 
-            END), 0) AS total_participants
+            WHEN tl.status_accepted = 'ACCEPTED' OR tl.status_payment = 'PENDING' 
+            THEN tl.total_participant 
+            ELSE 0 
+            END), 0) AS total_participants,
+            ot.max_people
         FROM 
             open_trips ot
         JOIN 
@@ -125,7 +126,8 @@ const getPartnerOpenTrip2 = (partner_uid) => {
                             ot.price,
                             mountain.name AS mountain_name,
                             mountain.mountain_uuid,
-                            COALESCE(SUM(tl.total_participant), 0) AS total_participants
+                            COALESCE(SUM(tl.total_participant), 0) AS total_participants,
+                            ot.max_people
                         FROM 
                             open_trips ot 
                         JOIN 
