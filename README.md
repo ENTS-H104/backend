@@ -1,14 +1,20 @@
-# Express.js App on Google Cloud Platform (GCP) with ACL and Third-Party API Integration
+# Express.js App on Google Cloud Platform (GCP) with ACL, Firebase Auth, OpenWeather, Midtrans, and API-ML
 
-This guide will help you replicate an Express.js application on Google Cloud Platform (GCP), configure Access Control Lists (ACL), and integrate a third-party API.
+This guide will help you replicate an Express.js application on Google Cloud Platform (GCP), configure Access Control Lists (ACL), integrate Firebase Authentication, OpenWeather, Midtrans, and API-ML APIs, use Cloud SQL and Firestore.
 
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
 - [Setting Up GCP](#setting-up-gcp)
 - [Deploying the Express.js App](#deploying-the-expressjs-app)
-- [Integrating a Third-Party API](#integrating-a-third-party-api)
+- [Integrating APIs](#integrating-apis)
+  - [Firebase Authentication](#firebase-authentication)
+  - [OpenWeather API](#openweather-api)
+  - [Midtrans API](#midtrans-api)
+  - [API-ML](#api-ml)
 - [Configuring ACL](#configuring-acl)
+- [Using Cloud SQL](#using-cloud-sql)
+- [Using Firestore](#using-firestore)
 - [Testing the Deployment](#testing-the-deployment)
 
 ## Prerequisites
@@ -31,6 +37,9 @@ Before you begin, ensure you have the following:
     - Enable the following APIs:
         - Cloud Build API
         - Cloud Run API
+        - Cloud SQL API
+        - Firestore API
+        - Firebase Authentication API
     - You can do this through the API library in the GCP Console.
 
 3. **Install Google Cloud SDK:**
@@ -86,21 +95,66 @@ Before you begin, ensure you have the following:
 
     - Follow the prompts to select your region and allow unauthenticated invocations if desired.
 
-## Integrating a Third-Party API
+## Integrating APIs
 
-1. **Choose a third-party API:**
-    - Decide which third-party API you want to integrate. For this example, we'll use the OpenWeatherMap API.
+### Firebase Authentication
 
-2. **Sign up and get an API key:**
+1. **Set up Firebase Authentication:**
+    - Go to the Firebase Console and select your GCP project.
+    - Navigate to the Authentication section and click "Get Started".
+
+2. **Install Firebase Admin SDK:**
+    ```bash
+    npm install firebase-admin
+    ```
+
+3. **Initialize Firebase in your app:**
+    ```javascript
+    const admin = require('firebase-admin');
+    const serviceAccount = require('PATH/TO/YOUR/SERVICE_ACCOUNT_KEY.json');
+
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
+
+    async function verifyIdToken(idToken) {
+        try {
+            const decodedToken = await admin.auth().verifyIdToken(idToken);
+            console.log('User ID:', decodedToken.uid);
+        } catch (error) {
+            console.error('Error verifying ID token:', error);
+        }
+    }
+    ```
+
+4. **Add authentication middleware:**
+    ```javascript
+    function authenticate(req, res, next) {
+        const idToken = req.headers.authorization;
+        if (!idToken) {
+            return res.status(401).send('Unauthorized');
+        }
+
+        verifyIdToken(idToken)
+            .then(() => next())
+            .catch(() => res.status(401).send('Unauthorized'));
+    }
+
+    app.use(authenticate);
+    ```
+
+### OpenWeather API
+
+1. **Sign up and get an API key:**
     - Sign up on [OpenWeatherMap](https://openweathermap.org/) and obtain your API key.
 
-3. **Install Axios:**
+2. **Install Axios:**
     - Install Axios to handle HTTP requests.
     ```bash
     npm install axios
     ```
 
-4. **Create a route to call the API:**
+3. **Create a route to call the API:**
     - Add the following code to your `app.js` or create a new route file (e.g., `routes/weather.js`).
     ```javascript
     const express = require('express');
@@ -123,11 +177,107 @@ Before you begin, ensure you have the following:
     module.exports = router;
     ```
 
-5. **Use the new route in your app:**
+4. **Use the new route in your app:**
     - Include the new route in your main `app.js` file.
     ```javascript
     const weatherRouter = require('./routes/weather');
     app.use('/api', weatherRouter);
+    ```
+
+### Midtrans API
+
+1. **Sign up and get an API key:**
+    - Sign up on [Midtrans](https://midtrans.com/) and obtain your API key.
+
+2. **Install Axios:**
+    - Install Axios to handle HTTP requests.
+    ```bash
+    npm install axios
+    ```
+
+3. **Create a route to call the API:**
+    - Add the following code to your `app.js` or create a new route file (e.g., `routes/payment.js`).
+    ```javascript
+    const express = require('express');
+    const axios = require('axios');
+    const router = express.Router();
+
+    const MIDTRANS_SERVER_KEY = 'YOUR_MIDTRANS_SERVER_KEY';
+    const MIDTRANS_API_URL = 'https://api.midtrans.com/v2/charge';
+
+    router.post('/payment', async (req, res) => {
+        const { order_id, gross_amount, payment_type } = req.body;
+
+        const payload = {
+            payment_type: payment_type,
+            transaction_details: {
+                order_id: order_id,
+                gross_amount: gross_amount
+            }
+        };
+
+        try {
+            const response = await axios.post(MIDTRANS_API_URL, payload, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Basic ${Buffer.from(MIDTRANS_SERVER_KEY).toString('base64')}`
+                }
+            });
+            res.json(response.data);
+        } catch (error) {
+            res.status(500).json({ error: 'Error processing payment' });
+        }
+    });
+
+    module.exports = router;
+    ```
+
+4. **Use the new route in your app:**
+    - Include the new route in your main `app.js` file.
+    ```javascript
+    const paymentRouter = require('./routes/payment');
+    app.use('/api', paymentRouter);
+    ```
+
+### API-ML
+
+1. **Sign up and get an API key:**
+    - Sign up on [API-ML](https://api-ml.com/) and obtain your API key.
+
+2. **Install Axios:**
+    - Install Axios to handle HTTP requests.
+    ```bash
+    npm install axios
+    ```
+
+3. **Create a route to call the API:**
+    - Add the following code to your `app.js` or create a new route file (e.g., `routes/ml.js`).
+    ```javascript
+    const express = require('express');
+    const axios = require('axios');
+    const router = express.Router();
+
+    const API_ML_KEY = 'YOUR_API_ML_KEY';
+    const API_ML_URL = 'https://api.api-ml.com/some-endpoint';
+
+    router.post('/ml', async (req, res) => {
+        const { inputData } = req.body;
+
+        try {
+            const response = await axios.post(API_ML_URL, { data: inputData }, {
+                headers: {
+                    'Authorization': `Bearer ${API_ML_KEY}`
+                }
+            });
+            res.json(response.data);
+        } catch (error) {
+            res.status(500).json({ error: 'Error processing machine learning data' });
+        }
+    });
+
+    module.exports = router;
+   ```markdown
+    app.use('/api', mlRouter);
     ```
 
 ## Configuring ACL
@@ -142,21 +292,71 @@ Before you begin, ensure you have the following:
     - Go to the "Permissions" tab and click "Add member".
     - Add the members and assign roles such as Cloud Run Invoker to control access.
 
+## Using Cloud SQL
+
+1. **Create a Cloud SQL instance:**
+    - Go to the SQL section in the GCP Console.
+    - Click "Create Instance" and follow the prompts to set up your instance.
+
+2. **Set up a database and user:**
+    - Create a new database and user for your application.
+
+3. **Connect to Cloud SQL from your app:**
+    - Install the necessary package:
+    ```bash
+    npm install mysql
+    ```
+    - Add the connection code in your app:
+    ```javascript
+    const mysql = require('mysql');
+    const connection = mysql.createConnection({
+        host: 'YOUR_CLOUD_SQL_HOST',
+        user: 'YOUR_DB_USER',
+        password: 'YOUR_DB_PASSWORD',
+        database: 'YOUR_DB_NAME'
+    });
+
+    connection.connect((err) => {
+        if (err) {
+            console.error('Error connecting to the database:', err);
+            return;
+        }
+        console.log('Connected to the Cloud SQL database.');
+    });
+    ```
+
+## Using Firestore
+
+1. **Set up Firestore:**
+    - Go to the Firestore section in the GCP Console.
+    - Click "Create Database" and select the appropriate mode (production or test).
+
+2. **Install Firestore package:**
+    ```bash
+    npm install @google-cloud/firestore
+    ```
+
+3. **Add Firestore connection code:**
+    ```javascript
+    const { Firestore } = require('@google-cloud/firestore');
+    const firestore = new Firestore();
+
+    async function addDocument(collection, document) {
+        const docRef = firestore.collection(collection).doc();
+        await docRef.set(document);
+        console.log('Document added with ID:', docRef.id);
+    }
+    ```
+
 ## Testing the Deployment
 
 1. **Access your deployed service:**
     - Once deployed, Cloud Run will provide a URL for your service.
-    - Open the URL in your browser to see your running Express.js application.
+    - Open the URL in your browser to see your running Express.js app.
 
-2. **Test the API integration:**
-    - Test the API endpoint by navigating to `http://YOUR_CLOUD_RUN_URL/api/weather/{city}`.
-
-3. **Verify ACLs:**
-    - Test access by logging in with different accounts to ensure ACLs are configured correctly.
-
-## Conclusion
-
-You have successfully deployed an Express.js application on Google Cloud Platform with ACL configurations and integrated a third-party API. For more details on managing ACLs and other advanced configurations, refer to the [GCP documentation](https://cloud.google.com/docs).
+2. **Test API endpoints:**
+    - Use a tool like Postman to test your API endpoints.
+    - Ensure you include necessary authentication tokens for Firebase Authentication protected routes.
 
 ## References
 
@@ -164,3 +364,9 @@ You have successfully deployed an Express.js application on Google Cloud Platfor
 - [Express.js](https://expressjs.com/)
 - [Docker](https://www.docker.com/)
 - [OpenWeatherMap API](https://openweathermap.org/api)
+- [Midtrans API](https://midtrans.com/)
+- [API-ML](https://api-ml.com/)
+- [Firebase Authentication](https://firebase.google.com/docs/auth)
+- [Cloud SQL](https://cloud.google.com/sql/docs)
+- [Firestore](https://cloud.google.com/firestore/docs)
+
