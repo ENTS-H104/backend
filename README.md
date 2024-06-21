@@ -1,6 +1,6 @@
 # Express.js App on Google Cloud Platform (GCP) with ACL, Firebase Auth, OpenWeather API, and Midtrans API
 
-This guide will help you replicate an Express.js application on Google Cloud Platform (GCP), configure Access Control Lists (ACL), integrate Firebase Authentication, OpenWeather, Midtrans, and API-ML APIs, use Cloud SQL and Firestore.
+This guide will help you replicate an Express.js application on Google Cloud Platform (GCP), configure Access Control Lists (ACL), integrate Firebase Authentication, OpenWeather, Midtrans, use Cloud SQL and Firestore.
 
 ## Table of Contents
 
@@ -136,7 +136,6 @@ gcloud auth application-default login
 - [Docker](https://www.docker.com/)
 - [OpenWeatherMap API](https://openweathermap.org/api)
 - [Midtrans API](https://midtrans.com/)
-- [API-ML](https://api-ml.com/)
 - [Firebase Authentication](https://firebase.google.com/docs/auth)
 - [Cloud SQL](https://cloud.google.com/sql/docs)
 - [Firestore](https://cloud.google.com/firestore/docs)
